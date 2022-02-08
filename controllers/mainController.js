@@ -38,15 +38,14 @@ const handleErrors = (err) => {
 }
 
 // Generate Nodemailer 
-let testAccount = nodemailer.createTestAccount();
 // create reusable transporter object using the default SMTP transport
 let transporter = nodemailer.createTransport({
     host: "smtp.ethereal.email",
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: testAccount.user, // generated ethereal user
-        pass: testAccount.pass, // generated ethereal password
+        user: 'adrain.wolf52@ethereal.email', // generated ethereal user
+        pass: 'SPqZvVC5VD34gF7swB', // generated ethereal password
     }
 });
 
@@ -124,9 +123,26 @@ module.exports.customer_signup_post = async (req, res) => {
     const code = Math.floor(Math.random() * 100000);
     const status = 'active';
 
+    const htmlContent = `
+    <h1>Hi ${firstname}!</h1>
+    
+    <h2>${code}</h2>
+    <p>It seems like you registered with this account. Please use this code to verify your account</p>
+
+    <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
+    `
+
     try {
         const newCustomer = await Customer.create({ firstname,lastname,username,email,password,verified,status,code });
-        const info = await transporter.
+        const info = await transporter.sendMail({
+            from: "'Tulin Bicycle Shop' <adrain.wolf52@ethereal.email>",
+            to: `${newCustomer.email}`,
+            subject: 'Account verification',
+            html: htmlContent
+        });
+        console.log("Message was sent: " + info.messageId);
+        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+
         res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id,redirect:`/verify/${newCustomer._id}` });
     } 
     catch(err) {
