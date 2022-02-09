@@ -151,6 +151,20 @@ module.exports.customer_signup_post = async (req, res) => {
     }
 }
 
+module.exports.customer_verify_put = (req,res) => {
+    const id = req.params.id;
+    const { verified } = req.body;
+
+    Customer.findByIdAndUpdate(id,{ verified: verified },(err,result) => {
+        if(err) {
+            console.log(err);
+        } else {
+            res.json({ mssg: 'Thank you for verifying your account!', redirect:'/login' });
+        }
+    })
+    
+}
+
 module.exports.customer_login_post = async (req,res) => {
     const { username,password } = req.body;
 
@@ -195,6 +209,20 @@ module.exports.customer_deleteAccount_put = (req,res) => {
             res.cookie('customerJwt','',{ maxAge: 1 });
             res.cookie('customerId','',{ maxAge: 1 });
             res.json({ redirect:'/login', mssg:'Your account has been deleted' });
+        }
+    })
+}
+
+// Used for forgot password
+module.exports.customer_get_username_email_fp = (req,res) => {
+    const account = req.params.account;
+
+    Customer.find({ username: account },(err,result) => {
+        if(err) {
+            console.log(err)
+        } else {
+            console.log(result)
+            res.json(result);
         }
     })
 }

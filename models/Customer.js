@@ -2,6 +2,10 @@ const mongoose = require('mongoose');
 const { isEmail } = require('validator');
 const bcrypt = require('bcrypt');
 
+const requiredString = {
+    type: String
+}
+
 const customerSchema = new mongoose.Schema({
     firstname: {
         type: String,
@@ -31,12 +35,8 @@ const customerSchema = new mongoose.Schema({
     verified: {
         type: Boolean
     },
-    status: {
-        type: String
-    },
-    code: {
-        type: String
-    }
+    status: requiredString,
+    code: requiredString
 });
 
 // fire a function before saving to database
