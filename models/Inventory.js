@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 
+const requiredString = {
+    type: String
+}
+
 const inventorySchema = new mongoose.Schema({
-    product_image: {
-        type: String
-    },
-    product_type: {
-        type: String
-    },
+    product_image: requiredString,
+    product_type: requiredString,
     brand_name: {
         type: String,
         required:[true, 'Please enter the brand of the product']

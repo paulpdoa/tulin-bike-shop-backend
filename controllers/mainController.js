@@ -170,14 +170,48 @@ module.exports.customer_login_post = async (req,res) => {
 
     try {
         const customer = await Customer.login(username,password);
-        const token = createToken(customer._id);
-        res.cookie('customerJwt', token, { maxAge: maxAge * 1000 });
-        res.status(201).json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname })
+        if(customer.verified) {
+            const token = createToken(customer._id);
+            res.cookie('customerJwt', token, { maxAge: maxAge * 1000 });
+            res.status(201).json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
+        } else {
+            res.status(201).json({ mssg:'this user is not yet verified, please verify your account',verify_id: customer._id });
+        }
     }
     catch(err) {
         const errors = handleErrors(err)
         res.status(400).json({ errors });
     }
+}
+// If the user tries to login with not verified account, resend the email
+module.exports.customer_resend_code_to_verify = async (req, res) => {
+    const id = req.params.id;
+
+    Customer.findById(id,async (err,result) => {
+        if(err) {
+            console.log(err);
+        } else {
+            const htmlContent = `
+                <h1>Hi ${result.firstname} ${result.lastname}!</h1>
+
+                <h2>${result.code}</h2>
+                <p>It seems like you want to verify this account. If this is not you, please ignore this email.</p>
+
+                <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
+                `
+            const info = await transporter.sendMail({
+                from: "'Tulin Bicycle Shop' <adrain.wolf52@ethereal.email>",
+                to: `${result.email}`,
+                subject: 'Account verification',
+                html: htmlContent
+            });
+            console.log("Message was sent: " + info.messageId);
+            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+        }
+    })
+
+    res.json({mssg:'An email was sent'});
+
 }
 
 module.exports.customer_logout_get = (req,res) => {
@@ -193,7 +227,9 @@ module.exports.customer_detail_get = (req, res) => {
         if(err) {
             res.send(err);
         } else {
-            res.status(200).json(result);
+            if(result.status === 'active') {
+                res.status(200).json(result);
+            }
         }
     }) 
 }
@@ -214,17 +250,36 @@ module.exports.customer_deleteAccount_put = (req,res) => {
 }
 
 // Used for forgot password
-module.exports.customer_get_username_email_fp = (req,res) => {
+module.exports.customer_get_username_fp = (req,res) => {
     const account = req.params.account;
 
-    Customer.find({ username: account },(err,result) => {
+    Customer.findOne({$or: [{email: account}, {username: account}]}, async (err,result) => {
         if(err) {
             console.log(err)
         } else {
-            console.log(result)
-            res.json(result);
+            res.json({ redirect: `/resetpassword/${result.id}` });
         }
     })
+}
+// Reset user password
+module.exports.customer_reset_password = async (req,res) => {
+    const id = req.params.id;
+    const { password } = req.body;
+    
+    try {
+        const newPassword = await Customer.resetPassword(id,password);
+        Customer.findByIdAndUpdate(id,{ password: newPassword },(err,result) => {
+            if(err) {
+                console.log(err)
+            } else {
+                res.status(200).json({ mssg: 'password has been updated',redirect:'/login' })
+            }
+        })
+    }
+    catch(err) {
+        const errors = handleErrors(err);
+        res.status(500).json(errors);
+    }   
 }
 
 // Inventory

@@ -59,5 +59,14 @@ customerSchema.statics.login = async function(username,password) {
     throw Error('This username doesn\'t exist');
 }
 
+customerSchema.statics.resetPassword = async function(id,password) {
+    const customer = await this.findById(id);
+    if(customer) {
+        const salt = await bcrypt.genSalt();
+        const newPassword = await bcrypt.hash(password,salt);
+        return newPassword;
+    }
+}
+
 const CustomerModel = mongoose.model('customers', customerSchema);
 module.exports = CustomerModel;
