@@ -36,8 +36,8 @@ const customerSchema = new mongoose.Schema({
         type: Boolean
     },
     status: requiredString,
-    code: requiredString
-});
+    code: requiredString,
+}); 
 
 // fire a function before saving to database
 customerSchema.pre('save', async function(next) {

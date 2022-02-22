@@ -1,17 +1,19 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
-const { upload } = require('../middleware/uploadMiddleware');
 
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
 const Inventory = require('../models/Inventory');
+const Cart = require('../models/Cart');
 const PaymentMethod = require('../models/PaymentMethod');
+
 
 // Error handling
 const handleErrors = (err) => {
     console.log(err.message,err.code);
     let errors = { email:'',username:'',password:'' };
+
     // Duplicate error code
     if(err.code === 11000) {
         errors.username= 'this username is already registered';
@@ -34,6 +36,12 @@ const handleErrors = (err) => {
             errors[properties.path] = properties.message;
         })
     }
+
+    if(err.message.includes('inventories validation failed')) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            errors[properties.path] = properties.message;
+        })
+    }
     return errors;
 }
 
@@ -48,7 +56,6 @@ let transporter = nodemailer.createTransport({
         pass: 'SPqZvVC5VD34gF7swB', // generated ethereal password
     }
 });
-
 
 // Create jwt
 const maxAge = 3 * 24 * 24 * 60;
@@ -89,8 +96,7 @@ module.exports.admin_login_post = async (req, res) => {
     try {
         const admin = await Admin.login(username,password);
         const token = createToken(admin._id);
-        res.cookie('adminJwt', token, { maxAge: maxAge * 1000 });
-        res.status(200).json({ admin: admin._id, redirect:'/dashboard',adminName: admin.username });
+        res.status(200).cookie('adminJwt', token, { maxAge: maxAge * 1000 }).json({ admin: admin._id, redirect:'/dashboard',adminName: admin.username });
     } 
     catch (err) {
         const errors = handleErrors(err);
@@ -172,8 +178,9 @@ module.exports.customer_login_post = async (req,res) => {
         const customer = await Customer.login(username,password);
         if(customer.verified) {
             const token = createToken(customer._id);
-            res.cookie('customerJwt', token, { maxAge: maxAge * 1000 });
-            res.status(201).json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
+            res.status(201)
+            .cookie('customerJwt', token, { maxAge: maxAge * 1000 })
+            .json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
         } else {
             res.status(201).json({ mssg:'this user is not yet verified, please verify your account',verify_id: customer._id });
         }
@@ -291,6 +298,106 @@ module.exports.inventory_get = (req,res) => {
             res.json(result);
         }
     })
+}
+
+module.exports.inventory_post = async (req,res) => {
+    const { product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity } = req.body;
+    
+    const {filename} = req.file;
+    // const imageUrl = process.env.LOCALHOST || process.env.SERVER_HOST + filename;
+    // console.log(imageUrl)
+
+    try {
+        const product = await Inventory.create({ product_image:filename,product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity });
+        res.status(201).json({ mssg: 'product has been added',redirect:'/dashboard' });
+    } 
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.inventory_accessory_get = async (req,res) => {
+    const type = 'Accessory';
+
+    try {
+        const accessories = await Inventory.accessory(type);
+        res.json(accessories);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.inventory_bike_get = async (req,res) => {
+    const type = 'Bicycle';
+
+    try {
+        const bikes = await Inventory.bike(type);
+        res.json(bikes);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.inventory_part_get = async (req,res) => {
+    const type = 'Part';
+
+    try {
+        const parts = await Inventory.part(type);
+        res.json(parts);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.inventory_detail_get = async(req,res) => {
+    const id = req.params.id;
+    
+    try {
+        const product = await Inventory.findById(id);
+        res.status(200).json(product);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+// Carts
+
+module.exports.cart_get = async (req,res) => {
+
+    try {
+        const orders = await Cart.find().populate('inventory_id customer_id');
+        res.json(orders);
+    }
+    catch(err) {
+        console.log(err)
+    }
+}
+
+module.exports.cart_post = async (req,res) => {
+    const { inventory_id,order_quantity,customer_id } = req.body.productToAdd;
+    try {
+        const data = await Cart.create({ inventory_id,customer_id,order_quantity });
+        res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' })
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customer_cart_get = async (req,res) => {
+    const id = req.params.id;
+
+    try {
+        const customerCart = await Cart.find({ 'customer_id': id }).populate('inventory_id');
+        res.json(customerCart);
+    }
+    catch(err) {
+
+    }
 }
 
 // Payment Method

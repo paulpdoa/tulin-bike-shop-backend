@@ -10,12 +10,12 @@ const requireCustomerAuth = (req,res,next) => {
                console.log(err.message);
            } else {
                console.log(decodedToken);
-               res.json({ redirect:'/' })
+               res.json({ redirect:'/',isAuth:true })
                next();
            }
        })
     }
-    res.json({ redirect:'/login' });
+    res.json({ redirect:'/login',isAuth:false })
 }
 
 module.exports = { requireCustomerAuth }
