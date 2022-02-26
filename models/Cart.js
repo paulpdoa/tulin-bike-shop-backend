@@ -6,12 +6,12 @@ const requiredString = {
 }
 
 const cartSchema = new mongoose.Schema({
-    inventory_id: [{ type: mongoose.Schema.Types.ObjectId, ref:'inventories'}],
-    customer_id: { type: mongoose.Schema.Types.ObjectId, ref:'customers' },
+    inventory_id: [{ type: mongoose.Schema.Types.ObjectId, ref:'inventory' }],
+    customer_id: { type: mongoose.Schema.Types.ObjectId, ref:'customer' },
     order_quantity: {
         type: Number
     },
 });
 
-const CartModel = mongoose.model('carts',cartSchema);
+const CartModel = mongoose.model('cart',cartSchema);
 module.exports = CartModel;

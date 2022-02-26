@@ -68,5 +68,5 @@ customerSchema.statics.resetPassword = async function(id,password) {
     }
 }
 
-const CustomerModel = mongoose.model('customers', customerSchema);
+const CustomerModel = mongoose.model('customer', customerSchema);
 module.exports = CustomerModel;

@@ -6,8 +6,12 @@ const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
 const Inventory = require('../models/Inventory');
 const Cart = require('../models/Cart');
+const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
 
+const paypal = require('@paypal/checkout-server-sdk');
+const Environment = process.env.NODE_ENV === 'production' ? paypal.core.LiveEnvironment : paypal.core.SandboxEnvironment;
+const paypalClient = new paypal.core.PayPalHttpClient(new Environment(process.env.PAYPAL_CLIENT_ID,process.env.PAYPAL_CLIENT_SECRET));
 
 // Error handling
 const handleErrors = (err) => {
@@ -379,9 +383,17 @@ module.exports.cart_get = async (req,res) => {
 
 module.exports.cart_post = async (req,res) => {
     const { inventory_id,order_quantity,customer_id } = req.body.productToAdd;
+
     try {
-        const data = await Cart.create({ inventory_id,customer_id,order_quantity });
-        res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' })
+        const productExist = await Cart.find({$and: [{'inventory_id':inventory_id},{'customer_id': customer_id}]});
+        if(productExist.length < 1) {
+            console.log('add 1 item to cart')
+            const data = await Cart.create({ inventory_id, customer_id, order_quantity });
+            res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' })
+        } else {
+            const addQuantity = await Cart.findByIdAndUpdate(productExist[0]._id,{ order_quantity: productExist[0].order_quantity + order_quantity });
+            res.status(201).json({ redirect:`/cart/${customer_id}`,mssg: 'item has been added to cart' });
+        }
     }
     catch(err) {
         console.log(err);
@@ -400,6 +412,18 @@ module.exports.customer_cart_get = async (req,res) => {
     }
 }
 
+module.exports.cart_delete = async(req,res) => {
+    const id = req.params.id;
+
+    try {
+        const deletedCartItem = await Cart.findByIdAndDelete(id);
+        res.status(201).json({ mssg:'item was deleted' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 // Payment Method
 module.exports.paymentmethod_get = (req,res) => {
     PaymentMethod.find({},(err,result) => {
@@ -410,3 +434,74 @@ module.exports.paymentmethod_get = (req,res) => {
         }
     })
 }
+
+// Scheduling
+module.exports.schedule_get = async (req,res) => {
+    
+    try {
+        const data = await Schedule.find().populate('customer_id');
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.schedule_post = async (req,res) => {
+    const { reserved_date,reserved_time,customer_concern,customer_id } = req.body;
+    const { filename } = req.file;
+    const status = 'pending';
+    
+    try {
+        const schedule = await Schedule.create({ customer_id,reserved_date,reserved_time,customer_concern,concern_image:filename,schedule_status:status });
+        res.status(201).json({ mssg: 'your schedule has been recorded! Please wait for approval',redirect:'/' })
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.order_post = async(req,res) => {
+    const status = 'pending';
+    console.log(req.body)
+}
+// module.exports.create_order_post = async (req,res) => {
+//     const request = new paypal.orders.OrdersCreateRequest();
+//     const total = req.body.paymentVal;
+//     request.prefer("return=representation");
+    
+//     request.requestBody({
+//         intent: "CAPTURE",
+//         purchase_units: [{
+//             amount: {
+//                 currency_code: "PHP",
+//                 value: total,
+//                 breakdown: {
+//                     item_total: {
+//                         currence_code: "PHP",
+//                         value: total
+//                     }
+//                 }
+//             },
+//             items: req.body.products.map(async (product) => {
+//                 const cartItems = await Cart.findById(product._id)
+//                 return {
+//                     name: cartItems.map((item) => item.inventory_id[0].product_name),
+//                     unit_amount: {
+//                         currency_code: "PHP",
+//                         value: cartItems.map((item) => item.inventory_id[0].product_price)
+//                     }
+//                 } 
+
+//             })
+//         }]
+//     })
+
+//     try {
+//         const order = await paypalClient.execute(request);
+//         console.log(order);
+//     }
+//     catch(err) {
+//         res.status(500).json({ error: err.message })
+//     }
+// }

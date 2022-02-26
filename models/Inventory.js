@@ -7,7 +7,6 @@ const requiredString = {
 }
 
 const inventorySchema = new mongoose.Schema({
-    _id: Schema.Types.ObjectId,
     product_image: requiredString,
     product_type: requiredString,
     brand_name: {
@@ -65,5 +64,5 @@ inventorySchema.statics.part = async function(type) {
     }
 
 
-const InventoryModel = mongoose.model('inventories', inventorySchema);
+const InventoryModel = mongoose.model('inventory', inventorySchema);
 module.exports = InventoryModel;

@@ -1,6 +1,6 @@
 const express = require('express');
 const route = express.Router();
-const { upload } = require('../middleware/uploadMiddleware');
+const { upload,schedUpload } = require('../middleware/uploadMiddleware');
 const { requireCustomerAuth } = require('../middleware/authMiddleware');
 
 const { 
@@ -10,9 +10,7 @@ const {
     customer_deleteAccount_put,customer_verify_put,customer_reset_password,
     inventory_get,paymentmethod_get, inventory_post, inventory_accessory_get, 
     inventory_bike_get,inventory_part_get,inventory_detail_get,cart_post, 
-    cart_get,
-    customer_cart_get} 
-    = require('../controllers/mainController');
+    cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete } = require('../controllers/mainController');
 
 // Admin Requests
 route.get('/admin', admin_get);
@@ -46,7 +44,16 @@ route.post('/inventory', upload.single('product_image'), inventory_post);
 route.get('/cart',cart_get);
 route.get('/cart/:id',customer_cart_get);
 route.post('/cart',cart_post);
+route.delete('/cart/:id',cart_delete);
+
 // Payment Method Requests
 route.get('/paymentmethod', paymentmethod_get);
+
+// Schedule Requests
+route.get('/schedule',schedule_get);
+route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
+
+// Order Requests
+
 
 module.exports = route;

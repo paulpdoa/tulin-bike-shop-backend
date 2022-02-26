@@ -35,5 +35,5 @@ adminSchema.statics.login = async function(username,password) {
 }
 
 
-const AdminModel = mongoose.model('admins', adminSchema);
+const AdminModel = mongoose.model('admin', adminSchema);
 module.exports = AdminModel;
