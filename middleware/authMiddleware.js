@@ -1,7 +1,7 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 
-const requireCustomerAuth = (req,res,next) => {
+const requireCustomerReservationAuth = (req,res,next) => {
     const token = req.cookies.customerJwt;
 
     if(token) {
@@ -10,12 +10,29 @@ const requireCustomerAuth = (req,res,next) => {
                console.log(err.message);
            } else {
                console.log(decodedToken);
-               res.json({ redirect:'/',isAuth:true })
-               next();
+               res.json({ redirect:'/reservation',isAuth:true })
            }
        })
     }
     res.json({ redirect:'/login',isAuth:false })
 }
 
-module.exports = { requireCustomerAuth }
+const requireAdminAuth = (req,res) => {
+    const token = req.cookies.adminJwt;
+
+    if(token) {
+        jwt.verify(token,process.env.SECRET,(err,decodedToken) => {
+            if(err) {
+                console.log(err)
+            } else {
+                console.log(decodedToken);
+                res.json({ isAuth: true })
+            }
+        })
+    } else {
+        res.json({ isAuth: false, redirect:'/adminlogin' })
+    }
+    
+}
+
+module.exports = { requireCustomerReservationAuth,requireAdminAuth }

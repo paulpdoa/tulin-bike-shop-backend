@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
 
 const mainRoute = require('./routes/mainRoute');
+const authRoute = require('./routes/authRoute');
 
 // Connect to MongoDB
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -36,5 +37,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 // Use routes
 app.use(mainRoute);
+app.use(authRoute);
 
 

@@ -3,7 +3,7 @@ const mongoose = require('mongoose');
 const scheduleSchema = new mongoose.Schema({
     customer_id: {type: mongoose.Schema.Types.ObjectId, ref: 'customer'},
     reserved_date: {
-        type: Date,
+        type: String,
         required: true
     },
     reserved_time: {
