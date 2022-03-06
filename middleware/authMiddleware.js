@@ -13,8 +13,10 @@ const requireCustomerReservationAuth = (req,res,next) => {
                res.json({ redirect:'/reservation',isAuth:true })
            }
        })
+    } else {
+        res.json({ redirect:'/login',isAuth:false })
     }
-    res.json({ redirect:'/login',isAuth:false })
+    
 }
 
 const requireAdminAuth = (req,res) => {

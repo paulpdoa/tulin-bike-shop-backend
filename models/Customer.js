@@ -27,6 +27,10 @@ const customerSchema = new mongoose.Schema({
         validate: [isEmail, 'Please enter a valid email'],
         lowercase: true
     },
+    address: {
+        type: String,
+        required: true
+    },
     password: {
         type: String,
         required: [true, 'Please enter a password'],

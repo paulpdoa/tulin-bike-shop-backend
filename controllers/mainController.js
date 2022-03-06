@@ -8,6 +8,7 @@ const Inventory = require('../models/Inventory');
 const Cart = require('../models/Cart');
 const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
+const Order = require('../models/Order');
 
 const paypal = require('@paypal/checkout-server-sdk');
 const Environment = process.env.NODE_ENV === 'production' ? paypal.core.LiveEnvironment : paypal.core.SandboxEnvironment;
@@ -383,13 +384,13 @@ module.exports.cart_get = async (req,res) => {
 
 module.exports.cart_post = async (req,res) => {
     const { inventory_id,order_quantity,customer_id } = req.body.productToAdd;
+    const order_status = 'pending';
 
     try {
-        const productExist = await Cart.find({$and: [{'inventory_id':inventory_id},{'customer_id': customer_id}]});
+        const productExist = await Cart.find({$and: [{'inventory_id':inventory_id},{'customer_id': customer_id},{'order_status':order_status}]});
         if(productExist.length < 1) {
-            console.log('add 1 item to cart')
-            const data = await Cart.create({ inventory_id, customer_id, order_quantity });
-            res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' })
+            const data = await Cart.create({ inventory_id, customer_id, order_quantity,order_status });
+            res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' });
         } else {
             const addQuantity = await Cart.findByIdAndUpdate(productExist[0]._id,{ order_quantity: productExist[0].order_quantity + order_quantity });
             res.status(201).json({ redirect:`/cart/${customer_id}`,mssg: 'item has been added to cart' });
@@ -404,11 +405,11 @@ module.exports.customer_cart_get = async (req,res) => {
     const id = req.params.id;
 
     try {
-        const customerCart = await Cart.find({ 'customer_id': id }).populate('inventory_id');
+        const customerCart = await Cart.find({$and: [{'customer_id': id},{'order_status':'pending'}]}).populate('inventory_id');
         res.json(customerCart);
     }
     catch(err) {
-
+        console.log(err);
     }
 }
 
@@ -417,7 +418,7 @@ module.exports.cart_delete = async(req,res) => {
 
     try {
         const deletedCartItem = await Cart.findByIdAndDelete(id);
-        res.status(201).json({ mssg:'item was deleted' });
+        res.status(200).json({ mssg:'item was deleted' });
     }
     catch(err) {
         console.log(err);
@@ -474,7 +475,40 @@ module.exports.schedule_post = async (req,res) => {
     }
 }
 
+module.exports.order_get = async(req,res) => {
+    try {
+       
+        const orders = await Order.find().populate('cart_id customer_id');
+        
+        res.status(200).json(orders);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customer_order_get = async(req,res) => {
+    const id = req.params.id;
+
+    try {   
+        const customerOrders = await Order.find({ 'customer_id':id }).populate('cart_id customer_id');
+        res.status(200).json(customerOrders);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 module.exports.order_post = async(req,res) => {
     const status = 'pending';
-    console.log(req.body)
+    const { customerId,cartItemId,inventoryId } = req.body;
+
+    try {
+        const postOrder = await Order.create({ customer_id:customerId, cart_id:cartItemId,order_status:status });
+        const cartId = await Cart.findByIdAndUpdate(cartItemId,{ 'order_status': 'ordered' });
+        res.status(201).json({ mssg: 'your order has been placed',redirect: `/profile/orders/${customerId}` });
+    }
+    catch(err) {
+        console.log(err);
+    }
 }

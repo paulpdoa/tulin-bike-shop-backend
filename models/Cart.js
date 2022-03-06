@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const requiredString = {
     type: String,
-    require: true
+    required: true
 }
 
 const cartSchema = new mongoose.Schema({
@@ -11,6 +11,7 @@ const cartSchema = new mongoose.Schema({
     order_quantity: {
         type: Number
     },
+    order_status: requiredString
 });
 
 const CartModel = mongoose.model('cart',cartSchema);
