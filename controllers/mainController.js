@@ -64,8 +64,8 @@ let transporter = nodemailer.createTransport({
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: 'polopdoandres@gmail.com', // generated ethereal user
-        pass: 'watdapak99', // generated ethereal password
+        user: process.env.MAIL_ACCOUNT, // generated ethereal user
+        pass: process.env.MAIL_PASSWORD, // generated ethereal password
     }
 });
 
@@ -153,7 +153,7 @@ module.exports.customer_signup_post = async (req, res) => {
 
         const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
         const info = await transporter.sendMail({
-            from: "'Tulin Bicycle Shop' <polopdoandres@gmail.com>",
+            from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
             to: `${newCustomer.email}`,
             subject: 'Account verification',
             html: htmlContent
@@ -218,7 +218,7 @@ module.exports.customer_resend_code_to_verify = async (req, res) => {
                 <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
                 `
             const info = await transporter.sendMail({
-                from: "'Tulin Bicycle Shop' <polopdoandres@gmail.com>",
+                from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
                 to: `${result.email}`,
                 subject: 'Account verification',
                 html: htmlContent
@@ -315,8 +315,6 @@ module.exports.inventory_post = async (req,res) => {
     const { product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity } = req.body;
     
     const {filename} = req.file;
-    // const imageUrl = process.env.LOCALHOST || process.env.SERVER_HOST + filename;
-    // console.log(imageUrl)
 
     try {
         const product = await Inventory.create({ product_image:filename,product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity });
