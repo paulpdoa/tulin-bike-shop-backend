@@ -20,12 +20,17 @@ const handleErrors = (err) => {
    
     let errors = { email:'',username:'',mobile: '' };
 
-    // Duplicate error code
-    if(err.code === 11000) {
-        errors.username= 'this username is already registered';
-        errors.email='this email is already registered';
-        errors.mobile='this number is already registered';
-        return errors;
+    // for duplicates
+    if(err.message.includes('customer validation failed')) {
+        Object.values(err.errors).forEach(({ properties }) => {
+            errors[properties.path] = properties.message;
+            if(properties.path === 'username') {
+                errors.username = 'this username is already registered';
+            }
+            if(properties.path === 'email') {
+                errors.email = 'this email is already registered';
+            }
+        })
     }
 
     // Incorrect username

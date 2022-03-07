@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { isEmail } = require('validator');
+const uniqueValidator = require('mongoose-unique-validator');
 const bcrypt = require('bcrypt');
 
 const requiredString = {
@@ -33,6 +34,7 @@ const customerSchema = new mongoose.Schema({
         type:String,
         required:true,
         unique:true,
+        maxlength: [11, 'Minimum length is 11 number']
     },
     barangay: requiredString,
     city: requiredString,
@@ -49,6 +51,9 @@ const customerSchema = new mongoose.Schema({
     status: requiredString,
     code: requiredString,
 }); 
+
+// validate for uniqueness
+customerSchema.plugin(uniqueValidator);
 
 // fire a function before saving to database
 customerSchema.pre('save', async function(next) {
