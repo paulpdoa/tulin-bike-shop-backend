@@ -17,12 +17,14 @@ const paypalClient = new paypal.core.PayPalHttpClient(new Environment(process.en
 // Error handling
 const handleErrors = (err) => {
     console.log(err.message,err.code);
-    let errors = { email:'',username:'',password:'' };
+   
+    let errors = { email:'',username:'',mobile: '' };
 
     // Duplicate error code
     if(err.code === 11000) {
         errors.username= 'this username is already registered';
         errors.email='this email is already registered';
+        errors.mobile='this number is already registered';
         return errors;
     }
 
@@ -53,12 +55,12 @@ const handleErrors = (err) => {
 // Generate Nodemailer 
 // create reusable transporter object using the default SMTP transport
 let transporter = nodemailer.createTransport({
-    host: "smtp.ethereal.email",
+    host: "smtp.gmail.com",
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: 'adrain.wolf52@ethereal.email', // generated ethereal user
-        pass: 'SPqZvVC5VD34gF7swB', // generated ethereal password
+        user: 'polopdoandres@gmail.com', // generated ethereal user
+        pass: 'watdapak99', // generated ethereal password
     }
 });
 
@@ -129,7 +131,7 @@ module.exports.customer_get = (req,res) => {
 }
 
 module.exports.customer_signup_post = async (req, res) => {
-    const { firstname,lastname,username,email,password } = req.body;
+    const { firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password } = req.body;
     const verified = false;
     const code = Math.floor(Math.random() * 100000);
     const status = 'active';
@@ -142,18 +144,17 @@ module.exports.customer_signup_post = async (req, res) => {
 
     <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
     `
-
     try {
-        const newCustomer = await Customer.create({ firstname,lastname,username,email,password,verified,status,code });
+
+        const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
         const info = await transporter.sendMail({
-            from: "'Tulin Bicycle Shop' <adrain.wolf52@ethereal.email>",
+            from: "'Tulin Bicycle Shop' <polopdoandres@gmail.com>",
             to: `${newCustomer.email}`,
             subject: 'Account verification',
             html: htmlContent
         });
-        console.log("Message was sent: " + info.messageId);
-        console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
-
+        
+        console.log("Message was sent: " + info.response);
         res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id,redirect:`/verify/${newCustomer._id}` });
     } 
     catch(err) {
@@ -212,7 +213,7 @@ module.exports.customer_resend_code_to_verify = async (req, res) => {
                 <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
                 `
             const info = await transporter.sendMail({
-                from: "'Tulin Bicycle Shop' <adrain.wolf52@ethereal.email>",
+                from: "'Tulin Bicycle Shop' <polopdoandres@gmail.com>",
                 to: `${result.email}`,
                 subject: 'Account verification',
                 html: htmlContent
@@ -491,7 +492,13 @@ module.exports.customer_order_get = async(req,res) => {
     const id = req.params.id;
 
     try {   
-        const customerOrders = await Order.find({ 'customer_id':id }).populate('cart_id customer_id');
+        // Deep population to populate inside a populated data
+        const customerOrders = await Order.find({ 'customer_id':id }).populate({
+            path: 'cart_id',
+            populate: {
+                path: 'inventory_id',
+            }
+        });
         res.status(200).json(customerOrders);
     }
     catch(err) {
@@ -501,11 +508,11 @@ module.exports.customer_order_get = async(req,res) => {
 
 module.exports.order_post = async(req,res) => {
     const status = 'pending';
-    const { customerId,cartItemId,inventoryId } = req.body;
-
+    const { customerId,cartItemId,paymentMethod } = req.body;
+    
     try {
-        const postOrder = await Order.create({ customer_id:customerId, cart_id:cartItemId,order_status:status });
-        const cartId = await Cart.findByIdAndUpdate(cartItemId,{ 'order_status': 'ordered' });
+        const postOrder = await Order.create({ customer_id:customerId, cart_id:cartItemId,order_status:status,payment_method:paymentMethod });
+        const cartId = await Cart.findByIdAndUpdate([cartItemId],{ 'order_status': 'ordered' });
         res.status(201).json({ mssg: 'your order has been placed',redirect: `/profile/orders/${customerId}` });
     }
     catch(err) {

@@ -6,7 +6,7 @@ const requiredString = {
 }
 
 const cartSchema = new mongoose.Schema({
-    inventory_id: [{ type: mongoose.Schema.Types.ObjectId, ref:'inventory' }],
+    inventory_id: { type: mongoose.Schema.Types.ObjectId, ref:'inventory' },
     customer_id: { type: mongoose.Schema.Types.ObjectId, ref:'customer' },
     order_quantity: {
         type: Number

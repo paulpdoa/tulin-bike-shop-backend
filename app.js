@@ -13,10 +13,19 @@ const authRoute = require('./routes/authRoute');
 // Connect to MongoDB
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
 const port = process.env.PORT || 8000;
+const options = {
+    useNewUrlParser: true,
+    autoIndex: true, //this is the code I added that solved it all
+    keepAlive: true,
+    connectTimeoutMS: 10000,
+    socketTimeoutMS: 45000,
+    family: 4, // Use IPv4, skip trying IPv6
+    useUnifiedTopology: true
+  }
 
 const connectToMongo = async () => {
     try {
-        await mongoose.connect(uri,{ useNewUrlParser: true, useUnifiedTopology: true });
+        await mongoose.connect(uri,options);
         app.listen(port,() => {
             console.log(`Listening on port ${port}, DB connected!`);
         });
