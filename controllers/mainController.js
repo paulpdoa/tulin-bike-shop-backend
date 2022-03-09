@@ -479,12 +479,45 @@ module.exports.schedule_post = async (req,res) => {
     }
 }
 
+// Orders
+
 module.exports.order_get = async(req,res) => {
+
     try {
-       
         const orders = await Order.find().populate('cart_id customer_id');
-        
         res.status(200).json(orders);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+// For all new orders
+module.exports.new_order_get = async(req,res) => {
+    try {
+        const newOrders = await Order.find({ 'order_status':'pending' }).populate({
+            path:'cart_id',
+            populate: {
+                path:'inventory_id',
+            }
+        });
+        res.status(200).json(newOrders);
+    } 
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.new_order_detail_get = async(req,res) => {
+    const id = req.params.id;
+
+    try {
+        const newOrders = await Order.find({$and: [{ 'customer_id':id },{ 'order_status':'pending' }] }).populate({
+            path: 'cart_id',
+            populate: {
+                path: 'inventory_id',
+            }});
+        res.status(200).json(newOrders);
     }
     catch(err) {
         console.log(err);
@@ -510,12 +543,16 @@ module.exports.customer_order_get = async(req,res) => {
 }
 
 module.exports.order_post = async(req,res) => {
+    // In this code, Whenever there is an order, it deducts the ordered quantity to the inventory
     const status = 'pending';
     const { customerId,cartItemId,paymentMethod } = req.body;
     
     try {
-        const postOrder = await Order.create({ customer_id:customerId, cart_id:cartItemId,order_status:status,payment_method:paymentMethod });
-        const cartId = await Cart.findByIdAndUpdate([cartItemId],{ 'order_status': 'ordered' });
+        const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod });
+        for(let i = 0; i < cartItemId.length; i++) {
+            const cartId = await Cart.findByIdAndUpdate(cartItemId[i],{ 'order_status': 'ordered' }).populate('inventory_id');
+            const inventory = await Inventory.findByIdAndUpdate(cartId.inventory_id._id,{ 'product_quantity': cartId.inventory_id.product_quantity - cartId.order_quantity });    
+        }
         res.status(201).json({ mssg: 'your order has been placed',redirect: `/profile/orders/${customerId}` });
     }
     catch(err) {

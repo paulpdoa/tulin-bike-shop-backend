@@ -3,15 +3,14 @@ const route = express.Router();
 const { upload,schedUpload } = require('../middleware/uploadMiddleware');
 const { requireCustomerAuth } = require('../middleware/authMiddleware');
 
-const { 
-    admin_get,admin_logout_get,admin_signup_post,admin_login_post,
+const { admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     customer_get,customer_logout_get,customer_get_username_fp,customer_detail_get,
     customer_resend_code_to_verify,customer_signup_post,customer_login_post,
     customer_deleteAccount_put,customer_verify_put,customer_reset_password,
     inventory_get,paymentmethod_get, inventory_post, inventory_accessory_get, 
     inventory_bike_get,inventory_part_get,inventory_detail_get,cart_post, 
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
-    order_post, order_get, customer_order_get} = require('../controllers/mainController');
+    order_post, order_get, customer_order_get, new_order_get, new_order_detail_get } = require('../controllers/mainController');
 
 // Admin Requests
 route.get('/admin', admin_get);
@@ -57,6 +56,8 @@ route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
 
 // Order Requests
 route.get('/order',order_get);
+route.get('/neworders',new_order_get);
+route.get('/neworders/:id',new_order_detail_get);
 route.get('/order/:id',customer_order_get);
 route.post('/order',order_post);
 
