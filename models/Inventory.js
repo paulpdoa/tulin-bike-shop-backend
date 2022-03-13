@@ -21,9 +21,9 @@ const inventorySchema = new mongoose.Schema({
         type: String,
         required: [true, 'Please enter the size of the product']
     },
-    product_color: {
+    product_color: [{
         type: String
-    },
+    }],
     product_quantity: {
         type: Number,
         required: [true, 'Please enter the quantity of the product']

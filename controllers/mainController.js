@@ -313,11 +313,11 @@ module.exports.inventory_get = (req,res) => {
 
 module.exports.inventory_post = async (req,res) => {
     const { product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity } = req.body;
-    
+    console.log(req.body);
     const {filename} = req.file;
 
     try {
-        const product = await Inventory.create({ product_image:filename,product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity });
+        const product = await Inventory.insertMany({ product_image:filename,product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity });
         res.status(201).json({ mssg: 'product has been added',redirect:'/dashboard' });
     } 
     catch(err) {
@@ -479,12 +479,47 @@ module.exports.schedule_post = async (req,res) => {
     }
 }
 
+module.exports.schedule_approve_customer = async (req,res) => {
+    const id = req.params.id;
+    const { schedule_status } = req.body;
+
+    try {
+        const approvedSchedule = await Schedule.findByIdAndUpdate(id,{ 'schedule_status':schedule_status }).populate('customer_id');
+
+        const htmlContent = `
+                <h1>Hi ${approvedSchedule.customer_id.firstname}!</h1>
+
+                <p>Hello! Your Schedule was already approved!</p>
+                <h2>${approvedSchedule.reserved_date} at ${approvedSchedule.reserved_time}</h2>
+
+                <p>See you at the store!</p>
+                `
+            const info = await transporter.sendMail({
+                from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+                to: `${approvedSchedule.customer_id.email}`,
+                subject: 'Account verification',
+                html: htmlContent
+            });
+            console.log("Message was sent: " + info.messageId);
+            res.status(201).json({ mssg: 'schedule has been approved, the customer will receive an email' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+   
+}
+
 // Orders
 
 module.exports.order_get = async(req,res) => {
 
     try {
-        const orders = await Order.find().populate('cart_id customer_id');
+        const orders = await Order.find().populate({
+            path: 'cart_id',
+            populate: {
+                path:'inventory_id'
+            }
+        });
         res.status(200).json(orders);
     }
     catch(err) {

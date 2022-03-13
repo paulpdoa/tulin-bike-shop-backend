@@ -10,7 +10,7 @@ const { admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     inventory_get,paymentmethod_get, inventory_post, inventory_accessory_get, 
     inventory_bike_get,inventory_part_get,inventory_detail_get,cart_post, 
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
-    order_post, order_get, customer_order_get, new_order_get, new_order_detail_get } = require('../controllers/mainController');
+    order_post, order_get, customer_order_get, new_order_get, new_order_detail_get, schedule_approve_customer } = require('../controllers/mainController');
 
 // Admin Requests
 route.get('/admin', admin_get);
@@ -52,6 +52,7 @@ route.get('/paymentmethod', paymentmethod_get);
 // Schedule Requests
 route.get('/schedule',schedule_get);
 route.get('/schedule/:id',schedule_detail_get);
+route.put('/schedule/:id',schedule_approve_customer);
 route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
 
 // Order Requests
