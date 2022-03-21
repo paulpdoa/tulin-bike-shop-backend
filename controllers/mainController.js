@@ -10,10 +10,6 @@ const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
 const Order = require('../models/Order');
 
-const paypal = require('@paypal/checkout-server-sdk');
-const Environment = process.env.NODE_ENV === 'production' ? paypal.core.LiveEnvironment : paypal.core.SandboxEnvironment;
-const paypalClient = new paypal.core.PayPalHttpClient(new Environment(process.env.PAYPAL_CLIENT_ID,process.env.PAYPAL_CLIENT_SECRET));
-
 // Error handling
 const handleErrors = (err) => {
     console.log(err.message,err.code);
@@ -405,12 +401,26 @@ module.exports.cart_post = async (req,res) => {
     }
 }
 
+//for pending orders
 module.exports.customer_cart_get = async (req,res) => {
     const id = req.params.id;
 
     try {
         const customerCart = await Cart.find({$and: [{'customer_id': id},{'order_status':'pending'}]}).populate('inventory_id');
-        res.json(customerCart);
+        res.status(200).json(customerCart);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+// For already in process
+module.exports.customer_cart_get_processing = async (req,res) => {
+    const id = req.params.id;
+
+    try {
+        const customerCart = await Cart.findById(id,{'order_status':'ordered'}).populate('inventory_id');
+        res.status(200).json(customerCart);
     }
     catch(err) {
         console.log(err);
@@ -543,22 +553,6 @@ module.exports.new_order_get = async(req,res) => {
     }
 }
 
-module.exports.new_order_detail_get = async(req,res) => {
-    const id = req.params.id;
-
-    try {
-        const newOrders = await Order.find({$and: [{ 'customer_id':id },{ 'order_status':'pending' }] }).populate({
-            path: 'cart_id',
-            populate: {
-                path: 'inventory_id',
-            }});
-        res.status(200).json(newOrders);
-    }
-    catch(err) {
-        console.log(err);
-    }
-}
-
 module.exports.customer_order_get = async(req,res) => {
     const id = req.params.id;
 
@@ -577,13 +571,34 @@ module.exports.customer_order_get = async(req,res) => {
     }
 }
 
+// module.exports.test_code = () => {
+//     let uniqueString = '';
+//     const keys = ['A','0','a','1','B','2','b','3','c','4','C','D','5','d','6','E','7','e','8','F','9','f','G','g','H','h','I','i','J','j','K','k'];
+    
+//     // This code just generates random string
+//     for(let i = 0; i < 16; i++) {
+//         uniqueString += keys[Math.floor(Math.random() * keys.length)];
+//     }
+    
+    
+// }
+
 module.exports.order_post = async(req,res) => {
     // In this code, Whenever there is an order, it deducts the ordered quantity to the inventory
     const status = 'pending';
+    // Add unique order id for showing the id to the store when claiming for reference
+    let uniqueString = '';
+    const keys = ['A','0','a','1','B','2','b','3','c','4','C','D','5','d','6','E','7','e','8','F','9','f','G','g','H','h','I','i','J','j','K','k'];
+    
+    // This code just generates random string
+    for(let i = 0; i < 16; i++) {
+        uniqueString += keys[Math.floor(Math.random() * keys.length)];
+    }
+    // const uniqueOrderId = String Generator
     const { customerId,cartItemId,paymentMethod } = req.body;
     
     try {
-        const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod });
+        const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod,uniqueOrder_id:uniqueString });
         for(let i = 0; i < cartItemId.length; i++) {
             const cartId = await Cart.findByIdAndUpdate(cartItemId[i],{ 'order_status': 'ordered' }).populate('inventory_id');
             const inventory = await Inventory.findByIdAndUpdate(cartId.inventory_id._id,{ 'product_quantity': cartId.inventory_id.product_quantity - cartId.order_quantity });    
