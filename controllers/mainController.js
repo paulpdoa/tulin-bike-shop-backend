@@ -1,6 +1,7 @@
 require('dotenv').config();
 const jwt = require('jsonwebtoken');
 const nodemailer = require('nodemailer');
+const bcrypt = require('bcrypt');
 
 const Admin = require('../models/Admin');
 const Customer = require('../models/Customer');
@@ -172,10 +173,23 @@ module.exports.customer_verify_put = (req,res) => {
         if(err) {
             console.log(err);
         } else {
-            res.json({ mssg: 'Thank you for verifying your account!', redirect:'/login' });
+            res.status(201).json({ mssg: 'Thank you for verifying your account!', redirect:'/login' });
         }
     })
-    
+}
+
+module.exports.update_profile = async (req,res) => {
+    const id = req.params.id;
+    const { password } = req.body;
+    const salt = await bcrypt.genSalt();
+
+    try {
+        const updatePassword = await Customer.findByIdAndUpdate(id,{ password: await bcrypt.hash(password,salt) });
+        res.status(201).json({mssg:'Password was updated'});
+    }
+    catch(err) {
+        console.log(err.message)
+    }
 }
 
 module.exports.customer_login_post = async (req,res) => {
@@ -570,6 +584,19 @@ module.exports.customer_order_get = async(req,res) => {
         console.log(err);
     }
 }
+//for getting the details of item ordered and the item itself
+module.exports.cart_customer_order_detail = async (req,res) => {
+    const id = req.params.id;
+   
+    try {
+        const cartItem = await Cart.findById(id).populate('customer_id inventory_id');
+        res.status(200).json(cartItem);
+    }
+    catch(err) {
+        res.send(err);
+        console.log(err)
+    }
+}
 
 // module.exports.test_code = () => {
 //     let uniqueString = '';
@@ -579,8 +606,6 @@ module.exports.customer_order_get = async(req,res) => {
 //     for(let i = 0; i < 16; i++) {
 //         uniqueString += keys[Math.floor(Math.random() * keys.length)];
 //     }
-    
-    
 // }
 
 module.exports.order_post = async(req,res) => {

@@ -11,7 +11,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     inventory_bike_get,inventory_part_get,inventory_detail_get,cart_post, 
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
-    customer_cart_get_processing } = require('../controllers/mainController');
+    customer_cart_get_processing,cart_customer_order_detail,update_profile } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -33,6 +33,7 @@ route.post('/customerlogin', customer_login_post);
 route.put('/customerdelete/:id', customer_deleteAccount_put);
 route.put('/customerverify/:id', customer_verify_put);
 route.put('/customerresetpassword/:id', customer_reset_password);
+route.patch('/customer/:id',update_profile);
 
 // Inventory Requests
 route.get('/inventory', inventory_get);
@@ -61,6 +62,7 @@ route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
 // Order Requests
 route.get('/order',order_get);
 route.get('/neworders',new_order_get);
+route.get('/neworders/:id',cart_customer_order_detail)
 route.get('/order/:id',customer_order_get);
 route.post('/order',order_post);
 

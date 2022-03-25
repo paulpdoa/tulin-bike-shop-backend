@@ -50,6 +50,9 @@ const customerSchema = new mongoose.Schema({
     },
     status: requiredString,
     code: requiredString,
+    profilePicture: {
+        type: String
+    }
 }); 
 
 // validate for uniqueness
