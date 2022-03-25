@@ -12,7 +12,7 @@ const cartSchema = new mongoose.Schema({
         type: Number
     },
     order_status: requiredString
-});
+},{ timestamps: true });
 
 const CartModel = mongoose.model('cart',cartSchema);
 module.exports = CartModel;
