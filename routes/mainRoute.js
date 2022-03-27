@@ -1,6 +1,6 @@
 const express = require('express');
 const route = express.Router();
-const { upload,schedUpload } = require('../middleware/uploadMiddleware');
+const { upload,schedUpload,profilePicUpload } = require('../middleware/uploadMiddleware');
 const { requireCustomerAuth } = require('../middleware/authMiddleware');
 
 const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
@@ -11,7 +11,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     inventory_bike_get,inventory_part_get,inventory_detail_get,cart_post, 
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
-    customer_cart_get_processing,cart_customer_order_detail,update_profile } = require('../controllers/mainController');
+    customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -29,6 +29,7 @@ route.get('/customerforgetpassword/:account', customer_get_username_fp);
 route.get('/customer/:id',customer_detail_get);
 route.get('/sendcodetoverify/:id', customer_resend_code_to_verify);
 route.post('/customer', customer_signup_post);
+route.post('/customer/profilepicture/:id', profilePicUpload.single('profile_image'), customer_upload_profile_picture);
 route.post('/customerlogin', customer_login_post);
 route.put('/customerdelete/:id', customer_deleteAccount_put);
 route.put('/customerverify/:id', customer_verify_put);

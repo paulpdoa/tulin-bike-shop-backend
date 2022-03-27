@@ -145,9 +145,10 @@ module.exports.customer_signup_post = async (req, res) => {
     <p>It seems like you registered with this account. Please use this code to verify your account</p>
 
     <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
-    `
-    try {
+    `;
+    console.log(req.body);
 
+    try {
         const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
         const info = await transporter.sendMail({
             from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
@@ -210,6 +211,21 @@ module.exports.customer_login_post = async (req,res) => {
         const errors = handleErrors(err)
         res.status(400).json({ errors });
     }
+}
+
+module.exports.customer_upload_profile_picture = async(req,res) => {
+    const id = req.params.id;
+    const { filename } = req.file;
+    
+    try {
+        const data = await Customer.findByIdAndUpdate(id, { profilePicture: filename });
+        res.status(201).json({ mssg:'Profile picture has been uploaded' })
+    }
+    catch(err) {
+        console.log(err);
+    }
+
+
 }
 // If the user tries to login with not verified account, resend the email
 module.exports.customer_resend_code_to_verify = async (req, res) => {
