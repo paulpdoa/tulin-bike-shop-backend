@@ -2,13 +2,31 @@ require('dotenv').config();
 require('events').EventEmitter.defaultMaxListeners = 15;
 const express = require('express');
 const app = express();
+const http = require('http');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
+const { Server } = require('socket.io');
 
 const mainRoute = require('./routes/mainRoute');
 const authRoute = require('./routes/authRoute');
+
+const server = http.createServer(app);
+const io = new Server(server,{
+    cors: {
+        origin:"http://localhost:3000/",
+        methods: ["GET","POST"],
+        credentials:true
+    }
+});
+
+io.on("connection", (socket) => {
+    console.log(`User connected: ${socket.id}`);
+    socket.on("send_message", (data) => {
+        console.log(data);
+    })
+})
 
 // Connect to MongoDB
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
@@ -26,7 +44,7 @@ const options = {
 const connectToMongo = async () => {
     try {
         await mongoose.connect(uri,options);
-        app.listen(port,() => {
+        server.listen(port,() => {
             console.log(`Listening on port ${port}, DB connected!`);
         });
     }
