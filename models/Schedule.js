@@ -18,7 +18,7 @@ const scheduleSchema = new mongoose.Schema({
     schedule_status: {
         type: String
     }
-})
+},{ timestamps: true })
 
 const ScheduleModel = mongoose.model('schedule',scheduleSchema);
 module.exports = ScheduleModel;

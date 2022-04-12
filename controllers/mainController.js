@@ -510,13 +510,27 @@ module.exports.schedule_post = async (req,res) => {
     const { filename } = req.file;
     const status = 'pending';
 
-    try {
-        const schedule = await Schedule.create({ customer_id,reserved_date,reserved_time,customer_concern,concern_image:filename,schedule_status:status });
-        res.status(201).json({ mssg: 'your schedule has been recorded! Please wait for approval',redirect:'/' })
-    }
-    catch(err) {
-        console.log(err);
-    }
+        // 1. If the customer already had it's schedule in a week, dont allow him, else allow.
+        // 2. Send a message to the frontend if the customer is allowed or not.
+        // 3. If the schedule was approved, dont allow to make another schedule
+        // 4. If there is a customer with that id, then check if the status is pending, if pending, approve, else don't
+        try {
+            const checkCustomer = await Schedule.find({ 'customer_id': customer_id}); //checks the customer if existing in the db
+            if(checkCustomer.length <= 1) { //check if there are customer with that id
+                if(checkCustomer[0].schedule_status === 'pending') { //check if the status of the found customer is pending
+                    // This block should check if the scheduled date is within this week
+                    res.status(200).json({ mssg: 'You are not allowed to have a schedule, your schedule is still pending, please wait for approval.' });
+                } else {
+                    res.status(201).json({ mssg: 'You currently have a schedule, please check your email to see if your schedule is approved.', redirect:'/' })
+                }
+            } else {
+                const schedule = await Schedule.create({ customer_id,reserved_date,reserved_time,customer_concern,concern_image:filename,schedule_status:status });
+                res.status(201).json({ mssg: 'Please wait for approval, an email will be sent to you', redirect:'/' })
+            }
+        }
+        catch(err) {
+            console.log(err);
+        }
 }
 
 module.exports.schedule_approve_customer = async (req,res) => {
@@ -537,7 +551,7 @@ module.exports.schedule_approve_customer = async (req,res) => {
             const info = await transporter.sendMail({
                 from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
                 to: `${approvedSchedule.customer_id.email}`,
-                subject: 'Account verification',
+                subject: 'Schedule Confirmation',
                 html: htmlContent
             });
             console.log("Message was sent: " + info.messageId);
@@ -578,6 +592,21 @@ module.exports.new_order_get = async(req,res) => {
         });
         res.status(200).json(newOrders);
     } 
+    catch(err) {
+        console.log(err);
+    }
+}
+// For all ordered items
+module.exports.ordered_item_get = async(req,res) => {
+    try {
+        const orderedItem = await Order.find({ 'order_status': 'ordered' }).populate({
+            path:'cart_id',
+            populate: {
+                path:'inventory_id'
+            }
+        });
+        res.status(200).json(orderedItem);
+    }
     catch(err) {
         console.log(err);
     }
@@ -645,6 +674,18 @@ module.exports.order_post = async(req,res) => {
             const inventory = await Inventory.findByIdAndUpdate(cartId.inventory_id._id,{ 'product_quantity': cartId.inventory_id.product_quantity - cartId.order_quantity });    
         }
         res.status(201).json({ mssg: 'your order has been placed',redirect: `/profile/orders/${customerId}` });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.cancel_order = async(req,res) => {
+    const { id } = req.body;
+
+    try {
+        const cancelOrder = await Order.findByIdAndUpdate(id,{ 'order_status': 'cancelled' });
+        res.status(200).json({ mssg: 'Your order was successfully cancelled',redirect: '/' });
     }
     catch(err) {
         console.log(err);
