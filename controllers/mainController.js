@@ -293,6 +293,25 @@ module.exports.customer_deleteAccount_put = (req,res) => {
     })
 }
 
+module.exports.customer_send_email = async (req,res) => {
+    const { message,name,email,subject } = req.body;
+    const htmlContent = `
+    <h1>Good day admin!</h1>
+    <h2>A message was sent to you by ${email}</h2>
+
+    <p>${message}</p>
+    `
+    const info = await transporter.sendMail({
+        from: `${name} <${email}>`,
+        to: `${process.env.MAIL_ACCOUNT}`,
+        subject: subject,
+        html: htmlContent
+    });
+    console.log("Message was sent: " + info.messageId);
+    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+    res.status(201).json({ mssg: 'Your email has been sent to Tulin Bicycle Shop' })
+}
+
 // Used for forgot password
 module.exports.customer_get_username_fp = (req,res) => {
     const account = req.params.account;
