@@ -684,7 +684,7 @@ module.exports.order_post = async(req,res) => {
         uniqueString += keys[Math.floor(Math.random() * keys.length)];
     }
     // const uniqueOrderId = String Generator
-    const { customerId,cartItemId,paymentMethod } = req.body;
+    const { id:customerId,cartItemId,paymentMethod } = req.body;
     
     try {
         const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod,uniqueOrder_id:uniqueString });
