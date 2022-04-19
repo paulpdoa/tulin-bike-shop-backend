@@ -12,7 +12,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
-    cancel_order, ordered_item_get, customer_send_email } = require('../controllers/mainController');
+    cancel_order, ordered_item_get, customer_send_email,order_customer_received } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -52,9 +52,10 @@ route.get('/cart/:id',customer_cart_get);
 route.get('/cart/ordered/:id',customer_cart_get_processing);
 route.post('/cart',cart_post);
 route.delete('/cart/:id',cart_delete);
+route.patch('/neworders',order_customer_received);
 
 // Payment Method Requests
-route.get('/paymentmethod', paymentmethod_get);
+route.get('/paymentmethod',paymentmethod_get);
 
 // Schedule Requests
 route.get('/schedule',schedule_get);

@@ -468,7 +468,7 @@ module.exports.customer_cart_get_processing = async (req,res) => {
     const id = req.params.id;
 
     try {
-        const customerCart = await Cart.findById(id,{'order_status':'ordered'}).populate('inventory_id');
+        const customerCart = await Cart.findById(id,{'order_status':'processing'}).populate('inventory_id');
         res.status(200).json(customerCart);
     }
     catch(err) {
@@ -488,6 +488,18 @@ module.exports.cart_delete = async(req,res) => {
     }
 }
 
+module.exports.order_customer_received = async(req,res) => {
+    const { id } = req.body;
+    
+    try {
+        const receiveOrder = await Order.findByIdAndUpdate(id, { 'order_status':'ordered' });
+        console.log(receiveOrder);
+        res.status(201).json({ mssg: 'order has been received by the customer' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
 
 // Payment Method
 module.exports.paymentmethod_get = (req,res) => {
@@ -648,7 +660,7 @@ module.exports.customer_order_get = async(req,res) => {
         console.log(err);
     }
 }
-//for getting the details of item ordered and the item itself
+//for getting the details of item ordered and the item itself, WILL BE USED FOR CART
 module.exports.cart_customer_order_detail = async (req,res) => {
     const id = req.params.id;
    
@@ -689,7 +701,7 @@ module.exports.order_post = async(req,res) => {
     try {
         const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod,uniqueOrder_id:uniqueString });
         for(let i = 0; i < cartItemId.length; i++) {
-            const cartId = await Cart.findByIdAndUpdate(cartItemId[i],{ 'order_status': 'ordered' }).populate('inventory_id');
+            const cartId = await Cart.findByIdAndUpdate(cartItemId[i],{ 'order_status': 'processing' }).populate('inventory_id');
             const inventory = await Inventory.findByIdAndUpdate(cartId.inventory_id._id,{ 'product_quantity': cartId.inventory_id.product_quantity - cartId.order_quantity });    
         }
         res.status(201).json({ mssg: 'your order has been placed',redirect: `/profile/orders/${customerId}` });
