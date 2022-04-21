@@ -7,7 +7,8 @@ const scheduleSchema = new mongoose.Schema({
         required: true
     },
     reserved_time: {
-        type: String
+        type:String,
+        required:true
     },
     concern_image: {
         type: String

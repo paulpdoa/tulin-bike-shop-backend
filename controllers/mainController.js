@@ -547,7 +547,8 @@ module.exports.schedule_post = async (req,res) => {
         // 4. If there is a customer with that id, then check if the status is pending, if pending, approve, else don't
         try {
             const checkCustomer = await Schedule.find({ 'customer_id': customer_id}); //checks the customer if existing in the db
-            if(checkCustomer.length <= 1) { //check if there are customer with that id
+            
+            if(checkCustomer.length > 0) { //check if there are customer with that id
                 if(checkCustomer[0].schedule_status === 'pending') { //check if the status of the found customer is pending
                     // This block should check if the scheduled date is within this week
                     res.status(200).json({ mssg: 'You are not allowed to have a schedule, your schedule is still pending, please wait for approval.' });
