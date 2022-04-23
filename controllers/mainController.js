@@ -10,6 +10,7 @@ const Cart = require('../models/Cart');
 const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
 const Order = require('../models/Order');
+const Chat = require('../models/Chat');
 
 // Error handling
 const handleErrors = (err) => {
@@ -545,9 +546,14 @@ module.exports.schedule_post = async (req,res) => {
         // 2. Send a message to the frontend if the customer is allowed or not.
         // 3. If the schedule was approved, dont allow to make another schedule
         // 4. If there is a customer with that id, then check if the status is pending, if pending, approve, else don't
+
+        // Limit only up to 5pm and should be unique per date
+        // 1. if the customer selects a time that is already existing in that date, don't allow, else allow
+
         try {
             const checkCustomer = await Schedule.find({ 'customer_id': customer_id}); //checks the customer if existing in the db
-            
+            const getReservedDate = await Schedule.find({ 'reserved_date': reserved_date });
+            console.log(getReservedDate);
             if(checkCustomer.length > 0) { //check if there are customer with that id
                 if(checkCustomer[0].schedule_status === 'pending') { //check if the status of the found customer is pending
                     // This block should check if the scheduled date is within this week
@@ -722,4 +728,34 @@ module.exports.cancel_order = async(req,res) => {
     catch(err) {
         console.log(err);
     }
+}
+
+// Chat Application
+module.exports.chat_get = async(req,res) => {
+    
+    try {
+        const data = await Chat.find().populate('sender receiver');
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+
+}
+
+module.exports.chat_post = async(req,res) => {
+    const {room,customer,message,time,day,sender,receiver,user} = req.body;
+    
+    // The sender is either the customer or admin
+    // Use the room variable to get the id of the user,
+    // in frontend the id of the user is used as the room id
+
+    try {
+        const data = await Chat.create({ room,sender,message,receiver,user,day,time }); 
+        console.log(`message was sent by ${customer}-${user}`)
+    }
+    catch(err) {
+        console.log(err);
+    }
+
 }
