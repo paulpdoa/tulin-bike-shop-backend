@@ -11,6 +11,10 @@ const orderSchema = new mongoose.Schema({
     },
     payment_method: {
         type: String
+    },
+    amount_paid: {
+        type: Number,
+        required:true
     }
 
 },{ timestamps: true });

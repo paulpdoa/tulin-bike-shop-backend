@@ -12,7 +12,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
-    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post } = require('../controllers/mainController');
+    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, sales_get } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -75,5 +75,8 @@ route.patch('/cancelorder',cancel_order);
 // Chat Requests
 route.get('/chat',chat_get);
 route.post('/chat',chat_post);
+
+// Sales Requests
+route.get('/sales',sales_get);
 
 module.exports = route;

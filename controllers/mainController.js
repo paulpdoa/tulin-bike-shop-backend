@@ -359,9 +359,8 @@ module.exports.inventory_get = (req,res) => {
 
 module.exports.inventory_post = async (req,res) => {
     const { product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity } = req.body;
-    console.log(req.body);
     const {filename} = req.file;
-
+    
     try {
         const product = await Inventory.insertMany({ product_image:filename,product_type,brand_name,product_name,product_size,product_price,product_description,product_color,product_quantity });
         res.status(201).json({ mssg: 'product has been added',redirect:'/dashboard' });
@@ -703,10 +702,10 @@ module.exports.order_post = async(req,res) => {
         uniqueString += keys[Math.floor(Math.random() * keys.length)];
     }
     // const uniqueOrderId = String Generator
-    const { id:customerId,cartItemId,paymentMethod } = req.body;
+    const { id:customerId,cartItemId,paymentMethod,totalAmount } = req.body;
     
     try {
-        const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod,uniqueOrder_id:uniqueString });
+        const postOrder = await Order.insertMany({ customer_id:customerId,cart_id:cartItemId,order_status:status,payment_method:paymentMethod,uniqueOrder_id:uniqueString,amount_paid: totalAmount });
         for(let i = 0; i < cartItemId.length; i++) {
             const cartId = await Cart.findByIdAndUpdate(cartItemId[i],{ 'order_status': 'processing' }).populate('inventory_id');
             const inventory = await Inventory.findByIdAndUpdate(cartId.inventory_id._id,{ 'product_quantity': cartId.inventory_id.product_quantity - cartId.order_quantity });    
@@ -752,7 +751,27 @@ module.exports.chat_post = async(req,res) => {
 
     try {
         const data = await Chat.create({ room,sender,message,receiver,user,day,time }); 
-        console.log(`message was sent by ${customer}-${user}`)
+        console.log(`message was sent by ${customer}-${user}`);
+        console.log(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+
+}
+
+// Sales
+
+module.exports.sales_get = async (req,res) => {
+    // HOW TO GET TOTAL SALES FOR THE MONTH?
+    // 1. From the first day of the month up to the present, add every income.
+    // 2. Filter per month to divide it by month
+    const months = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+    try {
+        // From April 1 up to the present day, get total sales.
+        const monthlySale = await Order.find({});
+        const monthly = monthlySale.map((sale) => sale.createdAt);
+        console.log(months[new Date(monthly).getMonth()]);
     }
     catch(err) {
         console.log(err);
