@@ -552,7 +552,6 @@ module.exports.schedule_post = async (req,res) => {
         try {
             const checkCustomer = await Schedule.find({ 'customer_id': customer_id}); //checks the customer if existing in the db
             const getReservedDate = await Schedule.find({ 'reserved_date': reserved_date });
-            console.log(getReservedDate);
             if(checkCustomer.length > 0) { //check if there are customer with that id
                 if(checkCustomer[0].schedule_status === 'pending') { //check if the status of the found customer is pending
                     // This block should check if the scheduled date is within this week
