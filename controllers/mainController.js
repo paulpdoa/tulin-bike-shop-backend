@@ -751,7 +751,6 @@ module.exports.chat_post = async(req,res) => {
     try {
         const data = await Chat.create({ room,sender,message,receiver,user,day,time }); 
         console.log(`message was sent by ${customer}-${user}`);
-        console.log(data);
     }
     catch(err) {
         console.log(err);
