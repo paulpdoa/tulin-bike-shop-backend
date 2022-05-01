@@ -24,7 +24,8 @@ const io = new Server(server,{
 
 
 // Connect to MongoDB
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://paulpdoa:andres_paulpdoa@tulinbicycleshop.h0zez.mongodb.net/capstone?retryWrites=true&w=majority`;
 const port = process.env.PORT || 8000;
 const options = {
     useNewUrlParser: true,
