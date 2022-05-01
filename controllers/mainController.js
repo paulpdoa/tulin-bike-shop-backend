@@ -70,7 +70,7 @@ let transporter = nodemailer.createTransport({
 // Create jwt
 const maxAge = 3 * 24 * 24 * 60;
 const createToken = (id) => {
-    return jwt.sign({ id }, process.env.SECRET || 'Y4iLL4yEdR6Xa1Q0jaOqB1yQDFy10yfxRaUq2jD1WiPZoGZtpCsRHZJpsh7umR2LHJNT848JpBx0HzjBIcWeLJzgPQFoZ5P7kFCw', {
+    return jwt.sign({ id },'Y4iLL4yEdR6Xa1Q0jaOqB1yQDFy10yfxRaUq2jD1WiPZoGZtpCsRHZJpsh7umR2LHJNT848JpBx0HzjBIcWeLJzgPQFoZ5P7kFCw', {
         expiresIn: maxAge
     })
 }
