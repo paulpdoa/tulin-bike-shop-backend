@@ -62,17 +62,15 @@ let transporter = nodemailer.createTransport({
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        // user: process.env.MAIL_ACCOUNT, 
-        // pass: process.env.MAIL_PASSWORD, 
-        user: 'tulinbikeshop@gmail.com', 
-        pass: 'capstonepassword',
+        user: process.env.MAIL_ACCOUNT, 
+        pass: process.env.MAIL_PASSWORD, 
     }
 });
 
 // Create jwt
 const maxAge = 3 * 24 * 24 * 60;
 const createToken = (id) => {
-    return jwt.sign({ id },'Y4iLL4yEdR6Xa1Q0jaOqB1yQDFy10yfxRaUq2jD1WiPZoGZtpCsRHZJpsh7umR2LHJNT848JpBx0HzjBIcWeLJzgPQFoZ5P7kFCw', {
+    return jwt.sign({ id },process.env.SECRET, {
         expiresIn: maxAge
     })
 }
@@ -153,11 +151,7 @@ module.exports.customer_signup_post = async (req, res) => {
     try {
         const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
         const info = await transporter.sendMail({
-            // from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
-            // to: `${newCustomer.email}`,
-            // subject: 'Account verification',
-            // html: htmlContent
-            from: `'Tulin Bicycle Shop' <tulinbikeshop@gmail.com>`,
+            from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
             to: `${newCustomer.email}`,
             subject: 'Account verification',
             html: htmlContent
@@ -309,7 +303,7 @@ module.exports.customer_send_email = async (req,res) => {
     `
     const info = await transporter.sendMail({
         from: `${name} <${email}>`,
-        to: `${process.env.MAIL_ACCOUNT}`,
+        to: process.env.MAIL_ACCOUNT,
         subject: subject,
         html: htmlContent
     });
