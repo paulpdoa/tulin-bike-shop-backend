@@ -62,8 +62,10 @@ let transporter = nodemailer.createTransport({
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.MAIL_ACCOUNT, // generated ethereal user
-        pass: process.env.MAIL_PASSWORD, // generated ethereal password
+        // user: process.env.MAIL_ACCOUNT, 
+        // pass: process.env.MAIL_PASSWORD, 
+        user: 'tulinbikeshop@gmail.com', 
+        pass: 'capstonepassword',
     }
 });
 
@@ -147,12 +149,15 @@ module.exports.customer_signup_post = async (req, res) => {
 
     <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
     `;
-    console.log(req.body);
 
     try {
         const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
         const info = await transporter.sendMail({
-            from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+            // from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+            // to: `${newCustomer.email}`,
+            // subject: 'Account verification',
+            // html: htmlContent
+            from: `'Tulin Bicycle Shop' <tulinbikeshop@gmail.com>`,
             to: `${newCustomer.email}`,
             subject: 'Account verification',
             html: htmlContent
