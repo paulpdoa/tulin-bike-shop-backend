@@ -12,7 +12,8 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
-    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, sales_get } = require('../controllers/mainController');
+    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, 
+    sales_get, expense_post, expense_get, inventory_sort_get } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -39,6 +40,7 @@ route.put('/customerresetpassword/:id', customer_reset_password);
 route.patch('/customer/:id',update_profile);
 
 // Inventory Requests
+route.get('/inventory-sort',inventory_sort_get);
 route.get('/inventory', inventory_get);
 route.get('/inventory/accessory',inventory_accessory_get);
 route.get('/inventory/bike', inventory_bike_get);
@@ -78,5 +80,9 @@ route.post('/chat',chat_post);
 
 // Sales Requests
 route.get('/sales',sales_get);
+
+// Expense Requests
+route.get('/expense', expense_get);
+route.post('/expense', expense_post);
 
 module.exports = route;

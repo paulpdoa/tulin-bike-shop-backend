@@ -11,6 +11,7 @@ const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
 const Order = require('../models/Order');
 const Chat = require('../models/Chat');
+const Expense = require('../models/Expense');
 
 // Error handling
 const handleErrors = (err) => {
@@ -346,6 +347,20 @@ module.exports.customer_reset_password = async (req,res) => {
 }
 
 // Inventory
+
+// Sort inventory base on quantity
+module.exports.inventory_sort_get = async (req,res) => {
+    const sort = { product_quantity: 1 };
+
+    try {
+        const data = await Inventory.find().sort(sort);
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 module.exports.inventory_get = (req,res) => {
     Inventory.find({},(err,result) => {
         if(err) {
@@ -521,6 +536,7 @@ module.exports.schedule_get = async (req,res) => {
     catch(err) {
         console.log(err);
     }
+
 }
 
 module.exports.schedule_detail_get = async (req,res) => {
@@ -774,4 +790,27 @@ module.exports.sales_get = async (req,res) => {
         console.log(err);
     }
 
+}
+
+// Expense
+module.exports.expense_get = async(req,res) => {
+    try {
+        const data = await Expense.find();
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.expense_post = async(req,res) => {
+    const { amount } = req.body;
+    
+    try {
+        const addExpense = await Expense.create({ amount });
+        res.status(201).json({ mssg: 'Expense was added', closeModal: false });
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
