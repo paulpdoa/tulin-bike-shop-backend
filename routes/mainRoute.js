@@ -13,7 +13,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
     cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, 
-    sales_get, expense_post, expense_get, inventory_sort_get } = require('../controllers/mainController');
+    sales_get, expense_post, expense_get, inventory_sort_get, inventory_delete } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -47,6 +47,7 @@ route.get('/inventory/bike', inventory_bike_get);
 route.get('/inventory/part', inventory_part_get);
 route.get('/inventory/:id',inventory_detail_get);
 route.post('/inventory', upload.single('product_image'), inventory_post);
+route.delete('/inventory/:id',inventory_delete);
 
 //Cart Requests
 route.get('/cart',cart_get);

@@ -432,6 +432,18 @@ module.exports.inventory_detail_get = async(req,res) => {
     }
 }
 
+module.exports.inventory_delete = async (req,res) => {
+    const id = req.params.id;
+
+    try {
+        const data = await Inventory.findByIdAndDelete(id);
+        console.log(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 // Carts
 
 module.exports.cart_get = async (req,res) => {
