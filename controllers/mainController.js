@@ -458,13 +458,13 @@ module.exports.cart_get = async (req,res) => {
 }
 
 module.exports.cart_post = async (req,res) => {
-    const { inventory_id,order_quantity,customer_id } = req.body.productToAdd;
+    const { inventory_id,order_quantity,customer_id,color } = req.body.productToAdd;
     const order_status = 'pending';
 
     try {
         const productExist = await Cart.find({$and: [{'inventory_id':inventory_id},{'customer_id': customer_id},{'order_status':order_status}]});
         if(productExist.length < 1) {
-            const data = await Cart.create({ inventory_id, customer_id, order_quantity,order_status });
+            const data = await Cart.create({ inventory_id, customer_id, order_quantity,order_status,product_color: color });
             res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' });
         } else {
             const addQuantity = await Cart.findByIdAndUpdate(productExist[0]._id,{ order_quantity: productExist[0].order_quantity + order_quantity });
@@ -757,9 +757,9 @@ module.exports.cancel_order = async(req,res) => {
 
 // Chat Application
 module.exports.chat_get = async(req,res) => {
-    
+
     try {
-        const data = await Chat.find().populate('sender receiver');
+        const data = await Chat.find().populate('sender receiver')
         res.status(200).json(data);
     }
     catch(err) {
@@ -825,4 +825,77 @@ module.exports.expense_post = async(req,res) => {
     catch(err) {
         console.log(err);
     }
+}
+
+module.exports.customize_get = async (req,res) => {
+    try {
+        const customizedBike = await Order.find({  }).populate('customer_id');
+        // Return only a collection with customized bike image
+        const data = customizedBike.filter(bike => bike.customized_bikeImg && bike.order_status === 'pending');
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customize_post = async(req,res) => {
+    const { customized_bikeImg,amount_paid,customer_id,payment_method } = req.body;
+    const order_status = 'pending';
+    console.log(amount_paid);
+
+    // Add unique order id for showing the id to the store when claiming for reference
+    let uniqueString = '';
+    const keys = ['A','0','a','1','B','2','b','3','c','4','C','D','5','d','6','E','7','e','8','F','9','f','G','g','H','h','I','i','J','j','K','k'];
+    
+    // This code just generates random string
+    for(let i = 0; i < 16; i++) {
+        uniqueString += keys[Math.floor(Math.random() * keys.length)];
+    }
+
+    try {
+        const customizedBike = await Order.create({ customized_bikeImg, amount_paid,customer_id,order_status, uniqueOrder_id:uniqueString,payment_method });
+        res.status(201).json({ redirect: '/' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customize_claimed = async(req,res) => {
+    const { id,fullPayment } = req.body;
+
+    try {
+        const claimOrder = await Order.findByIdAndUpdate(id,{ 'order_status': 'ordered','amount_paid': fullPayment });
+        res.status(200).json({ redirect: '/dashboard' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+} 
+module.exports.customize_updates = async(req,res) => {
+    // Send an email to the user to show updates for the customer
+   const { message,email,name } = req.body;
+
+   try {
+    const htmlContent = `
+        <h1>Hi ${name}!</h1>
+
+        <p>Hello! This is an update about your customized bicycle!</p>
+        <h2>${message}</h2>
+
+        <p>See you soon at the store!</p>
+        `
+    const info = await transporter.sendMail({
+        from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+        to: `${email}`,
+        subject: 'Customization Update',
+        html: htmlContent
+    });
+    console.log("Message was sent: " + info.messageId);
+    res.status(201).json({ redirect:'/dashboard', mssg: `email update has been sent to ${name}` })
+   }
+   catch(err) {
+       console.log(err);
+   }
 }
