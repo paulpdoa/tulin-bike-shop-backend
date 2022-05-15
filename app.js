@@ -4,7 +4,10 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: 'https://tulin-bike-shop.netlify.app'
+}));
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
