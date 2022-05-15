@@ -201,9 +201,7 @@ module.exports.customer_login_post = async (req,res) => {
         const customer = await Customer.login(username,password);
         if(customer.verified) {
             const token = createToken(customer._id);
-            res.status(201)
-            .cookie('customerJwt', token, { maxAge: maxAge * 1000 })
-            .json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
+            res.status(201).cookie('customerJwt', token, { maxAge: maxAge * 1000 }).json({ customerId: customer._id,customerJwt: token ,redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
         } else {
             res.status(201).json({ mssg:'this user is not yet verified, please verify your account',verify_id: customer._id });
         }
