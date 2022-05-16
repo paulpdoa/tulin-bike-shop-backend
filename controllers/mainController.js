@@ -624,6 +624,18 @@ module.exports.schedule_approve_customer = async (req,res) => {
    
 }
 
+module.exports.schedule_cancel = async(req,res) => {
+    const { id } = req.params;
+    console.log(id);
+    try {
+        const cancelSched = await Schedule.findByIdAndDelete(id);
+        res.status(201).json({ mssg:'your schedule was deleted' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 // Orders
 
 module.exports.order_get = async(req,res) => {
@@ -742,10 +754,10 @@ module.exports.order_post = async(req,res) => {
 }
 
 module.exports.cancel_order = async(req,res) => {
-    const { id } = req.body;
+    const { id } = req.params;  
 
     try {
-        const cancelOrder = await Order.findByIdAndUpdate(id,{ 'order_status': 'cancelled' });
+        const cancelOrder = await Cart.findByIdAndDelete(id);
         res.status(200).json({ mssg: 'Your order was successfully cancelled',redirect: '/' });
     }
     catch(err) {

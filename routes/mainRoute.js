@@ -14,7 +14,7 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
     cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, 
     sales_get, expense_post, expense_get, inventory_sort_get, inventory_delete, customize_post, customize_get, 
-    customize_claimed,customize_updates } = require('../controllers/mainController');
+    customize_claimed,customize_updates,schedule_cancel } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -66,6 +66,7 @@ route.get('/schedule',schedule_get);
 route.get('/schedule/:id',schedule_detail_get);
 route.put('/schedule/:id',schedule_approve_customer);
 route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
+route.delete('/schedule/:id',schedule_cancel);
 
 // Order Requests
 route.get('/order',order_get);
@@ -74,7 +75,7 @@ route.get('/neworders/:id',cart_customer_order_detail)
 route.get('/order/:id',customer_order_get);
 route.get('/ordereditem', ordered_item_get);
 route.post('/order',order_post);
-route.patch('/cancelorder',cancel_order);
+route.delete('/cancelorder/:id',cancel_order);
 
 // Chat Requests
 route.get('/chat',chat_get);
