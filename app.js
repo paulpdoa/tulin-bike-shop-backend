@@ -17,18 +17,18 @@ const mainRoute = require('./routes/mainRoute');
 const authRoute = require('./routes/authRoute');
 
 const server = http.createServer(app);
-const io = new Server(server,{
-    cors: {
-        origin:"http://localhost:3000",
-        methods: ["GET","POST"],
-    }
-});
 // const io = new Server(server,{
 //     cors: {
-//         origin:"https://tulin-bike-shop.netlify.app",
+//         origin:"http://localhost:3000",
 //         methods: ["GET","POST"],
 //     }
 // });
+const io = new Server(server,{
+    cors: {
+        origin: process.env.FRONTEND_LINK || "http://localhost:3000",
+        methods: ["GET","POST"],
+    }
+});
 
 // Connect to MongoDB
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
