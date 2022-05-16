@@ -107,7 +107,7 @@ module.exports.admin_login_post = async (req, res) => {
     try {
         const admin = await Admin.login(username,password);
         const token = createToken(admin._id);
-        res.status(200).cookie('adminJwt', token, { maxAge: maxAge * 1000 }).json({ admin: admin._id, redirect:'/dashboard',adminName: admin.username });
+        res.status(200).cookie('adminJwt', token, { maxAge: maxAge * 1000 }).json({ admin: admin._id,adminJwt: token, redirect:'/dashboard',adminName: admin.username });
     } 
     catch (err) {
         const errors = handleErrors(err);
@@ -199,7 +199,7 @@ module.exports.customer_login_post = async (req,res) => {
 
     try {
         const customer = await Customer.login(username,password);
-        if(customer.verified) {
+        if(customer.verified && customer.status === 'active') {
             const token = createToken(customer._id);
             res.status(201).cookie('customerJwt', token, { maxAge: maxAge * 1000 }).json({ customerId: customer._id,customerJwt: token ,redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
         } else {
