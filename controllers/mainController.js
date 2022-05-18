@@ -135,6 +135,7 @@ module.exports.customer_get = (req,res) => {
 }
 
 module.exports.customer_signup_post = async (req, res) => {
+    
     const { firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password } = req.body;
     const verified = false;
     const code = Math.floor(Math.random() * 100000);
@@ -159,7 +160,7 @@ module.exports.customer_signup_post = async (req, res) => {
         });
         
         console.log("Message was sent: " + info.response);
-        res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id,redirect:`/verify/${newCustomer._id}` });
+        res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id, redirect:`/verify/${newCustomer._id}`});
     } 
     catch(err) {
         const errors = handleErrors(err);
@@ -312,16 +313,32 @@ module.exports.customer_send_email = async (req,res) => {
 }
 
 // Used for forgot password
-module.exports.customer_get_username_fp = (req,res) => {
+module.exports.customer_get_username_fp = async(req,res) => {
     const account = req.params.account;
+    // when email or username was entered, search it in customer table then send email to that registered email
 
-    Customer.findOne({$or: [{email: account}, {username: account}]}, async (err,result) => {
-        if(err) {
-            console.log(err)
-        } else {
-            res.json({ redirect: `/resetpassword/${result.id}` });
-        }
-    })
+    try {
+        const customer = await Customer.findOne({$or: [{email: account}, {username: account}]});
+        const htmlContent = `
+                <h1>Hi ${customer.firstname} ${customer.lastname}!</h1>
+
+                <h2>Click this <a href="http://localhost:3000/resetpassword/${customer.id}">link</a> for reseting your password </h2>
+                
+                <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
+                `
+            const info = await transporter.sendMail({
+                from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+                to: `${customer.email}`,
+                subject: 'Account verification',
+                html: htmlContent
+            });
+            console.log("Message was sent: " + info.messageId);
+            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+            res.status(201).json({ mssg: `an email was sent to your email, please check` })
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
 // Reset user password
 module.exports.customer_reset_password = async (req,res) => {
@@ -488,6 +505,24 @@ module.exports.customer_cart_get = async (req,res) => {
 }
 
 // For already in process
+module.exports.cart_order_history = async (req,res) => {
+    try {
+        const customerCart = await Cart.find({$or: [{'order_status': 'ordered'},{'order_status':'cancelled'}]}).populate('inventory_id');
+        res.status(200).json(customerCart);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+module.exports.customer_cart_processing_orders = async(req,res) => {
+    try {
+        const customerCart = await Cart.find({ 'order_status':'processing' }).populate('inventory_id');
+        res.status(200).json(customerCart);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
 module.exports.customer_cart_get_processing = async (req,res) => {
     const id = req.params.id;
 
@@ -513,11 +548,11 @@ module.exports.cart_delete = async(req,res) => {
 }
 
 module.exports.order_customer_received = async(req,res) => {
-    const { id } = req.body;
+    const { id,cartId } = req.body;
     
     try {
         const receiveOrder = await Order.findByIdAndUpdate(id, { 'order_status':'ordered' });
-        console.log(receiveOrder);
+        const cartOrdered = await Cart.findByIdAndUpdate(cartId,{ 'order_status':'ordered' });
         res.status(201).json({ mssg: 'order has been received by the customer' });
     }
     catch(err) {
@@ -757,7 +792,7 @@ module.exports.cancel_order = async(req,res) => {
     const { id } = req.params;  
 
     try {
-        const cancelOrder = await Cart.findByIdAndDelete(id);
+        const cancelOrder = await Cart.findByIdAndUpdate(id,{ 'order_status':'cancelled' });   
         res.status(200).json({ mssg: 'Your order was successfully cancelled',redirect: '/' });
     }
     catch(err) {
