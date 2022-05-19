@@ -29,6 +29,17 @@ const io = new Server(server,{
 //         methods: ["GET","POST"],
 //     }
 // });
+// DB_USER = paulpdoa
+// DB_PASSWORD = andres_paulpdoa
+// DB_NAME = capstone
+
+// MAIL_ACCOUNT = tulinbikeshop@gmail.com
+// MAIL_PASSWORD = capstonepassword
+
+// PORT = 8000
+// FRONTEND_LINK = https://tulin-bike-shop.netlify.app
+
+// SECRET = Y4iLL4yEdR6Xa1Q0jaOqB1yQDFy10yfxRaUq2jD1WiPZoGZtpCsRHZJpsh7umR2LHJNT848JpBx0HzjBIcWeLJzgPQFoZ5P7kFCw
 
 // Connect to MongoDB
 // const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;

@@ -876,7 +876,7 @@ module.exports.customize_get = async (req,res) => {
     try {
         const customizedBike = await Order.find({  }).populate('customer_id');
         // Return only a collection with customized bike image
-        const data = customizedBike.filter(bike => bike.customized_bikeImg && bike.order_status === 'pending');
+        const data = customizedBike.filter(bike => bike.customized_bikeImg);
         res.status(200).json(data);
     }
     catch(err) {
