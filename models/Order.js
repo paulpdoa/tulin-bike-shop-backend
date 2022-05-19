@@ -15,6 +15,9 @@ const orderSchema = new mongoose.Schema({
     amount_paid: {
         type: Number,
         required:true
+    },
+    customized_bikeImg: {
+        type: String
     }
 
 },{ timestamps: true });

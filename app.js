@@ -4,7 +4,10 @@ const express = require('express');
 const app = express();
 const http = require('http');
 const cors = require('cors');
-app.use(cors());
+app.use(cors({
+    credentials: true,
+    origin: 'https://tulin-bike-shop.netlify.app'
+}));
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 const bodyParser = require('body-parser');
@@ -16,15 +19,31 @@ const authRoute = require('./routes/authRoute');
 const server = http.createServer(app);
 const io = new Server(server,{
     cors: {
-        origin:"http://localhost:3000" || process.env.FRONTEND_LINK,
+        origin:"http://localhost:3000",
         methods: ["GET","POST"],
     }
 });
+// const io = new Server(server,{
+//     cors: {
+//         origin: process.env.FRONTEND_LINK || "http://localhost:3000",
+//         methods: ["GET","POST"],
+//     }
+// });
+// DB_USER = paulpdoa
+// DB_PASSWORD = andres_paulpdoa
+// DB_NAME = capstone
 
+// MAIL_ACCOUNT = tulinbikeshop@gmail.com
+// MAIL_PASSWORD = capstonepassword
 
+// PORT = 8000
+// FRONTEND_LINK = https://tulin-bike-shop.netlify.app
+
+// SECRET = Y4iLL4yEdR6Xa1Q0jaOqB1yQDFy10yfxRaUq2jD1WiPZoGZtpCsRHZJpsh7umR2LHJNT848JpBx0HzjBIcWeLJzgPQFoZ5P7kFCw
 
 // Connect to MongoDB
-const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+// const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@tulinbicycleshop.h0zez.mongodb.net/${process.env.DB_NAME}?retryWrites=true&w=majority`;
+const uri = `mongodb+srv://paulpdoa:andres_paulpdoa@tulinbicycleshop.h0zez.mongodb.net/capstone?retryWrites=true&w=majority`;
 const port = process.env.PORT || 8000;
 const options = {
     useNewUrlParser: true,

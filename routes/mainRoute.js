@@ -12,7 +12,9 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     cart_get,customer_cart_get,schedule_post,schedule_get,cart_delete, schedule_detail_get, 
     order_post, order_get, customer_order_get, new_order_get, schedule_approve_customer, 
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
-    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, sales_get } = require('../controllers/mainController');
+    cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, 
+    sales_get, expense_post, expense_get, inventory_sort_get, inventory_delete, customize_post, customize_get, 
+    customize_claimed,customize_updates,schedule_cancel, customer_cart_processing_orders,cart_order_history } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
@@ -39,15 +41,19 @@ route.put('/customerresetpassword/:id', customer_reset_password);
 route.patch('/customer/:id',update_profile);
 
 // Inventory Requests
+route.get('/inventory-sort',inventory_sort_get);
 route.get('/inventory', inventory_get);
 route.get('/inventory/accessory',inventory_accessory_get);
 route.get('/inventory/bike', inventory_bike_get);
 route.get('/inventory/part', inventory_part_get);
 route.get('/inventory/:id',inventory_detail_get);
 route.post('/inventory', upload.single('product_image'), inventory_post);
+route.delete('/inventory/:id',inventory_delete);
 
 //Cart Requests
 route.get('/cart',cart_get);
+route.get('/cart/processed',customer_cart_processing_orders);
+route.get('/cart/history',cart_order_history);
 route.get('/cart/:id',customer_cart_get);
 route.get('/cart/ordered/:id',customer_cart_get_processing);
 route.post('/cart',cart_post);
@@ -62,6 +68,7 @@ route.get('/schedule',schedule_get);
 route.get('/schedule/:id',schedule_detail_get);
 route.put('/schedule/:id',schedule_approve_customer);
 route.post('/schedule',schedUpload.single('concern_image'),schedule_post);
+route.delete('/schedule/:id',schedule_cancel);
 
 // Order Requests
 route.get('/order',order_get);
@@ -70,7 +77,7 @@ route.get('/neworders/:id',cart_customer_order_detail)
 route.get('/order/:id',customer_order_get);
 route.get('/ordereditem', ordered_item_get);
 route.post('/order',order_post);
-route.patch('/cancelorder',cancel_order);
+route.patch('/cancelorder/:id',cancel_order);
 
 // Chat Requests
 route.get('/chat',chat_get);
@@ -78,5 +85,15 @@ route.post('/chat',chat_post);
 
 // Sales Requests
 route.get('/sales',sales_get);
+
+// Expense Requests
+route.get('/expense', expense_get);
+route.post('/expense', expense_post);
+
+// Customize Requests
+route.get('/customize',customize_get);
+route.post('/customize', customize_post);
+route.post('/updates',customize_updates);
+route.patch('/customize',customize_claimed);
 
 module.exports = route;

@@ -11,6 +11,7 @@ const Schedule = require('../models/Schedule');
 const PaymentMethod = require('../models/PaymentMethod');
 const Order = require('../models/Order');
 const Chat = require('../models/Chat');
+const Expense = require('../models/Expense');
 
 // Error handling
 const handleErrors = (err) => {
@@ -62,15 +63,15 @@ let transporter = nodemailer.createTransport({
     port: 587,
     secure: false, // true for 465, false for other ports
     auth: {
-        user: process.env.MAIL_ACCOUNT, // generated ethereal user
-        pass: process.env.MAIL_PASSWORD, // generated ethereal password
+        user: process.env.MAIL_ACCOUNT, 
+        pass: process.env.MAIL_PASSWORD, 
     }
 });
 
 // Create jwt
 const maxAge = 3 * 24 * 24 * 60;
 const createToken = (id) => {
-    return jwt.sign({ id }, process.env.SECRET, {
+    return jwt.sign({ id },process.env.SECRET, {
         expiresIn: maxAge
     })
 }
@@ -106,7 +107,7 @@ module.exports.admin_login_post = async (req, res) => {
     try {
         const admin = await Admin.login(username,password);
         const token = createToken(admin._id);
-        res.status(200).cookie('adminJwt', token, { maxAge: maxAge * 1000 }).json({ admin: admin._id, redirect:'/dashboard',adminName: admin.username });
+        res.status(200).cookie('adminJwt', token, { maxAge: maxAge * 1000 }).json({ admin: admin._id,adminJwt: token, redirect:'/dashboard',adminName: admin.username });
     } 
     catch (err) {
         const errors = handleErrors(err);
@@ -134,6 +135,7 @@ module.exports.customer_get = (req,res) => {
 }
 
 module.exports.customer_signup_post = async (req, res) => {
+    
     const { firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password } = req.body;
     const verified = false;
     const code = Math.floor(Math.random() * 100000);
@@ -147,7 +149,6 @@ module.exports.customer_signup_post = async (req, res) => {
 
     <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
     `;
-    console.log(req.body);
 
     try {
         const newCustomer = await Customer.create({ firstname,lastname,username,email,mobile,address,barangay,city,province,postalCode,password,verified,status,code });
@@ -159,7 +160,7 @@ module.exports.customer_signup_post = async (req, res) => {
         });
         
         console.log("Message was sent: " + info.response);
-        res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id,redirect:`/verify/${newCustomer._id}` });
+        res.status(201).json({ mssg: `${newCustomer.firstname} has been created, please check your email for verification`, customerId: newCustomer._id, redirect:`/verify/${newCustomer._id}`});
     } 
     catch(err) {
         const errors = handleErrors(err);
@@ -199,11 +200,9 @@ module.exports.customer_login_post = async (req,res) => {
 
     try {
         const customer = await Customer.login(username,password);
-        if(customer.verified) {
+        if(customer.verified && customer.status === 'active') {
             const token = createToken(customer._id);
-            res.status(201)
-            .cookie('customerJwt', token, { maxAge: maxAge * 1000 })
-            .json({ customerId: customer._id, redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
+            res.status(201).cookie('customerJwt', token, { maxAge: maxAge * 1000 }).json({ customerId: customer._id,customerJwt: token ,redirect:'/',mssg: `Welcome ${customer.username}!`,customerFirstname: customer.firstname,customerSurname:customer.lastname });
         } else {
             res.status(201).json({ mssg:'this user is not yet verified, please verify your account',verify_id: customer._id });
         }
@@ -304,7 +303,7 @@ module.exports.customer_send_email = async (req,res) => {
     `
     const info = await transporter.sendMail({
         from: `${name} <${email}>`,
-        to: `${process.env.MAIL_ACCOUNT}`,
+        to: process.env.MAIL_ACCOUNT,
         subject: subject,
         html: htmlContent
     });
@@ -314,16 +313,32 @@ module.exports.customer_send_email = async (req,res) => {
 }
 
 // Used for forgot password
-module.exports.customer_get_username_fp = (req,res) => {
+module.exports.customer_get_username_fp = async(req,res) => {
     const account = req.params.account;
+    // when email or username was entered, search it in customer table then send email to that registered email
 
-    Customer.findOne({$or: [{email: account}, {username: account}]}, async (err,result) => {
-        if(err) {
-            console.log(err)
-        } else {
-            res.json({ redirect: `/resetpassword/${result.id}` });
-        }
-    })
+    try {
+        const customer = await Customer.findOne({$or: [{email: account}, {username: account}]});
+        const htmlContent = `
+                <h1>Hi ${customer.firstname} ${customer.lastname}!</h1>
+
+                <h2>Click this <a href="http://localhost:3000/resetpassword/${customer.id}">link</a> for reseting your password </h2>
+                
+                <p>Thank you for using Tulin Bicycle Shop! Enjoy Shopping!</p>
+                `
+            const info = await transporter.sendMail({
+                from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+                to: `${customer.email}`,
+                subject: 'Account verification',
+                html: htmlContent
+            });
+            console.log("Message was sent: " + info.messageId);
+            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+            res.status(201).json({ mssg: `an email was sent to your email, please check` })
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
 // Reset user password
 module.exports.customer_reset_password = async (req,res) => {
@@ -347,6 +362,20 @@ module.exports.customer_reset_password = async (req,res) => {
 }
 
 // Inventory
+
+// Sort inventory base on quantity
+module.exports.inventory_sort_get = async (req,res) => {
+    const sort = { product_quantity: 1 };
+
+    try {
+        const data = await Inventory.find().sort(sort);
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 module.exports.inventory_get = (req,res) => {
     Inventory.find({},(err,result) => {
         if(err) {
@@ -418,6 +447,18 @@ module.exports.inventory_detail_get = async(req,res) => {
     }
 }
 
+module.exports.inventory_delete = async (req,res) => {
+    const id = req.params.id;
+
+    try {
+        const data = await Inventory.findByIdAndDelete(id);
+        console.log(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 // Carts
 
 module.exports.cart_get = async (req,res) => {
@@ -432,13 +473,13 @@ module.exports.cart_get = async (req,res) => {
 }
 
 module.exports.cart_post = async (req,res) => {
-    const { inventory_id,order_quantity,customer_id } = req.body.productToAdd;
+    const { inventory_id,order_quantity,customer_id,color } = req.body.productToAdd;
     const order_status = 'pending';
 
     try {
         const productExist = await Cart.find({$and: [{'inventory_id':inventory_id},{'customer_id': customer_id},{'order_status':order_status}]});
         if(productExist.length < 1) {
-            const data = await Cart.create({ inventory_id, customer_id, order_quantity,order_status });
+            const data = await Cart.create({ inventory_id, customer_id, order_quantity,order_status,product_color: color });
             res.status(201).json({ redirect:`/cart/${customer_id}`, mssg:'item has been added to cart' });
         } else {
             const addQuantity = await Cart.findByIdAndUpdate(productExist[0]._id,{ order_quantity: productExist[0].order_quantity + order_quantity });
@@ -464,6 +505,24 @@ module.exports.customer_cart_get = async (req,res) => {
 }
 
 // For already in process
+module.exports.cart_order_history = async (req,res) => {
+    try {
+        const customerCart = await Cart.find({$or: [{'order_status': 'ordered'},{'order_status':'cancelled'}]}).populate('inventory_id');
+        res.status(200).json(customerCart);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+module.exports.customer_cart_processing_orders = async(req,res) => {
+    try {
+        const customerCart = await Cart.find({ 'order_status':'processing' }).populate('inventory_id');
+        res.status(200).json(customerCart);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
 module.exports.customer_cart_get_processing = async (req,res) => {
     const id = req.params.id;
 
@@ -489,11 +548,11 @@ module.exports.cart_delete = async(req,res) => {
 }
 
 module.exports.order_customer_received = async(req,res) => {
-    const { id } = req.body;
+    const { id,cartId } = req.body;
     
     try {
         const receiveOrder = await Order.findByIdAndUpdate(id, { 'order_status':'ordered' });
-        console.log(receiveOrder);
+        const cartOrdered = await Cart.findByIdAndUpdate(cartId,{ 'order_status':'ordered' });
         res.status(201).json({ mssg: 'order has been received by the customer' });
     }
     catch(err) {
@@ -522,6 +581,7 @@ module.exports.schedule_get = async (req,res) => {
     catch(err) {
         console.log(err);
     }
+
 }
 
 module.exports.schedule_detail_get = async (req,res) => {
@@ -597,6 +657,18 @@ module.exports.schedule_approve_customer = async (req,res) => {
         console.log(err);
     }
    
+}
+
+module.exports.schedule_cancel = async(req,res) => {
+    const { id } = req.params;
+    console.log(id);
+    try {
+        const cancelSched = await Schedule.findByIdAndDelete(id);
+        res.status(201).json({ mssg:'your schedule was deleted' });
+    }
+    catch(err) {
+        console.log(err);
+    }
 }
 
 // Orders
@@ -717,10 +789,10 @@ module.exports.order_post = async(req,res) => {
 }
 
 module.exports.cancel_order = async(req,res) => {
-    const { id } = req.body;
+    const { id } = req.params;  
 
     try {
-        const cancelOrder = await Order.findByIdAndUpdate(id,{ 'order_status': 'cancelled' });
+        const cancelOrder = await Cart.findByIdAndUpdate(id,{ 'order_status':'cancelled' });   
         res.status(200).json({ mssg: 'Your order was successfully cancelled',redirect: '/' });
     }
     catch(err) {
@@ -730,9 +802,9 @@ module.exports.cancel_order = async(req,res) => {
 
 // Chat Application
 module.exports.chat_get = async(req,res) => {
-    
+
     try {
-        const data = await Chat.find().populate('sender receiver');
+        const data = await Chat.find().populate('sender receiver')
         res.status(200).json(data);
     }
     catch(err) {
@@ -775,4 +847,100 @@ module.exports.sales_get = async (req,res) => {
         console.log(err);
     }
 
+}
+
+// Expense
+module.exports.expense_get = async(req,res) => {
+    try {
+        const data = await Expense.find();
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.expense_post = async(req,res) => {
+    const { amount } = req.body;
+    
+    try {
+        const addExpense = await Expense.create({ amount });
+        res.status(201).json({ mssg: 'Expense was added', closeModal: false });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customize_get = async (req,res) => {
+    try {
+        const customizedBike = await Order.find({  }).populate('customer_id');
+        // Return only a collection with customized bike image
+        const data = customizedBike.filter(bike => bike.customized_bikeImg);
+        res.status(200).json(data);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customize_post = async(req,res) => {
+    const { customized_bikeImg,amount_paid,customer_id,payment_method } = req.body;
+    const order_status = 'pending';
+    console.log(amount_paid);
+
+    // Add unique order id for showing the id to the store when claiming for reference
+    let uniqueString = '';
+    const keys = ['A','0','a','1','B','2','b','3','c','4','C','D','5','d','6','E','7','e','8','F','9','f','G','g','H','h','I','i','J','j','K','k'];
+    
+    // This code just generates random string
+    for(let i = 0; i < 16; i++) {
+        uniqueString += keys[Math.floor(Math.random() * keys.length)];
+    }
+
+    try {
+        const customizedBike = await Order.create({ customized_bikeImg, amount_paid,customer_id,order_status, uniqueOrder_id:uniqueString,payment_method });
+        res.status(201).json({ redirect: '/' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
+module.exports.customize_claimed = async(req,res) => {
+    const { id,fullPayment } = req.body;
+
+    try {
+        const claimOrder = await Order.findByIdAndUpdate(id,{ 'order_status': 'ordered','amount_paid': fullPayment });
+        res.status(200).json({ redirect: '/dashboard' });
+    }
+    catch(err) {
+        console.log(err);
+    }
+} 
+module.exports.customize_updates = async(req,res) => {
+    // Send an email to the user to show updates for the customer
+   const { message,email,name } = req.body;
+
+   try {
+    const htmlContent = `
+        <h1>Hi ${name}!</h1>
+
+        <p>Hello! This is an update about your customized bicycle!</p>
+        <h2>${message}</h2>
+
+        <p>See you soon at the store!</p>
+        `
+    const info = await transporter.sendMail({
+        from: `'Tulin Bicycle Shop' <${process.env.MAIL_ACCOUNT}>`,
+        to: `${email}`,
+        subject: 'Customization Update',
+        html: htmlContent
+    });
+    console.log("Message was sent: " + info.messageId);
+    res.status(201).json({ redirect:'/dashboard', mssg: `email update has been sent to ${name}` })
+   }
+   catch(err) {
+       console.log(err);
+   }
 }

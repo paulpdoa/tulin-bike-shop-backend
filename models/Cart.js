@@ -11,7 +11,10 @@ const cartSchema = new mongoose.Schema({
     order_quantity: {
         type: Number
     },
-    order_status: requiredString
+    order_status: requiredString,
+    product_color: {
+        type: String
+    }
 },{ timestamps: true });
 
 const CartModel = mongoose.model('cart',cartSchema);
