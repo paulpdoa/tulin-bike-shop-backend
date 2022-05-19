@@ -76,6 +76,18 @@ const createToken = (id) => {
     })
 }
 
+// Home page LATEST Product
+module.exports.new_arrival_product = async(req,res) => {
+    try {
+        const newProduct = await Inventory.find({});
+        const latestProduct = newProduct[newProduct.length - 1];
+        res.status(200).json(latestProduct);
+    }
+    catch(err) {
+        console.log(err);
+    }
+}
+
 // Admin
 module.exports.admin_get = (req, res) => {
     Admin.find({}, (err,result) => {

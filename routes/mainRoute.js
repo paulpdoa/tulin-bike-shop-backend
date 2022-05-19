@@ -14,10 +14,13 @@ const { test_code,admin_get,admin_logout_get,admin_signup_post,admin_login_post,
     customer_cart_get_processing,cart_customer_order_detail,update_profile,customer_upload_profile_picture, 
     cancel_order, ordered_item_get, customer_send_email,order_customer_received,chat_get, chat_post, 
     sales_get, expense_post, expense_get, inventory_sort_get, inventory_delete, customize_post, customize_get, 
-    customize_claimed,customize_updates,schedule_cancel, customer_cart_processing_orders,cart_order_history } = require('../controllers/mainController');
+    customize_claimed,customize_updates,schedule_cancel, customer_cart_processing_orders,cart_order_history, new_arrival_product } = require('../controllers/mainController');
 
 // Code Test
 // route.get('/test',test_code);
+// New Arrival
+route.get('/new-arrival',new_arrival_product);
+
 
 // Admin Requests
 route.get('/admin', admin_get);
