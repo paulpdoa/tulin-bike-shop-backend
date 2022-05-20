@@ -377,10 +377,9 @@ module.exports.customer_reset_password = async (req,res) => {
 
 // Sort inventory base on quantity
 module.exports.inventory_sort_get = async (req,res) => {
-    const sort = { product_quantity: 1 };
 
     try {
-        const data = await Inventory.find().sort(sort);
+        const data = await Cart.find({ 'order_status':'ordered' }).populate('inventory_id');
         res.status(200).json(data);
     }
     catch(err) {
